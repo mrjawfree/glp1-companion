@@ -8,29 +8,55 @@ import { supabase } from '../../lib/supabase'
 export default function Profile() {
   const navigate = useNavigate()
   const { data, update } = useOnboarding()
-  const { user } = useAuth()
+  const { user, signUp } = useAuth()
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
 
   const isOtherMed = data.medication === 'other'
   const totalSteps = isOtherMed ? 4 : 5
   const step = isOtherMed ? 3 : 4
+  const currentYear = new Date().getFullYear()
+  const maxBirthYear = currentYear - 13
 
   const handleComplete = async () => {
-    if (!user) return
     setSaving(true)
     setError('')
 
     try {
+      let activeUser = user
+      if (!activeUser) {
+        if (!email || !password) {
+          setError('Email and password are required to create your account.')
+          setSaving(false)
+          return
+        }
+        if (password.length < 6) {
+          setError('Password must be at least 6 characters.')
+          setSaving(false)
+          return
+        }
+        await signUp(email, password)
+        const { data: sessionData } = await supabase.auth.getSession()
+        activeUser = sessionData.session?.user ?? null
+        if (!activeUser) {
+          setError('Account created! Check your email to confirm, then tap below again.')
+          setSaving(false)
+          return
+        }
+      }
+
       const { error: upsertError } = await supabase.from('users').upsert({
-        id: user.id,
-        email: user.email,
-        display_name: data.displayName || user.email?.split('@')[0],
+        id: activeUser.id,
+        email: activeUser.email,
+        display_name: data.displayName || activeUser.email?.split('@')[0],
         medication: data.medication,
         current_dose: data.currentDoseMg,
         start_date: data.lastDoseDate,
       })
       if (upsertError) throw upsertError
+      localStorage.removeItem('glp1_onboarding_route')
       navigate('/onboarding/notifications')
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to save profile')
@@ -43,10 +69,38 @@ export default function Profile() {
     <OnboardingShell step={step} totalSteps={totalSteps} onBack={() => navigate('/onboarding/goals')}>
       <h1 className="text-display-lg text-slate-900 mb-2">Almost there</h1>
       <p className="text-body-lg text-slate-500 mb-6">
-        A few basics so we can personalize your experience.
+        {user ? 'A few basics so we can personalize your experience.' : 'Create your account and set up your profile.'}
       </p>
 
       <div className="space-y-5 mb-8">
+        {!user && (
+          <>
+            <div>
+              <label className="text-label text-slate-500 uppercase mb-2 block">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="w-full border-2 border-slate-200 rounded-md px-4 py-3 text-body-lg bg-white focus:border-slate-700 focus:outline-none"
+                required
+              />
+            </div>
+            <div>
+              <label className="text-label text-slate-500 uppercase mb-2 block">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="At least 6 characters"
+                minLength={6}
+                className="w-full border-2 border-slate-200 rounded-md px-4 py-3 text-body-lg bg-white focus:border-slate-700 focus:outline-none"
+                required
+              />
+            </div>
+          </>
+        )}
+
         <div>
           <label className="text-label text-slate-500 uppercase mb-2 block">Display name</label>
           <input
@@ -96,9 +150,14 @@ export default function Profile() {
             <input
               type="number"
               min={1920}
-              max={2010}
+              max={maxBirthYear}
               value={data.birthYear ?? ''}
-              onChange={(e) => update({ birthYear: e.target.value ? parseInt(e.target.value) : null })}
+              onChange={(e) => {
+                const val = e.target.value ? parseInt(e.target.value) : null
+                if (val !== null && val > maxBirthYear) return
+                if (val !== null && val < 1920) return
+                update({ birthYear: val })
+              }}
               placeholder="1988"
               className="w-full border-2 border-slate-200 rounded-md px-4 py-3 text-body-lg bg-white focus:border-slate-700 focus:outline-none"
             />
@@ -140,7 +199,7 @@ export default function Profile() {
           disabled={saving}
           className="w-full bg-slate-700 text-white py-4 rounded-md text-label uppercase tracking-wider disabled:opacity-40 hover:bg-slate-900 transition-colors"
         >
-          {saving ? 'Setting up...' : "You're set up"}
+          {saving ? 'Setting up...' : user ? "You're set up" : 'Create account & continue'}
         </button>
       </div>
     </OnboardingShell>

@@ -34,7 +34,7 @@ const SIDE_EFFECTS = [
   { key: 'feeling_good', label: 'Feeling good', hasSeverity: false },
 ]
 
-const medications: Medication[] = ['ozempic', 'wegovy', 'mounjaro', 'zepbound', 'saxenda', 'other']
+const medications: Medication[] = ['ozempic', 'wegovy', 'mounjaro', 'zepbound', 'saxenda', 'rybelsus', 'other']
 
 function getSuggestedSite(lastSite: string | null): InjectionSite {
   if (!lastSite) return 'left_abdomen'
@@ -262,7 +262,7 @@ export default function DoseLog() {
 
           <div>
             <label className="text-label text-slate-500 uppercase mb-2 block">Date & time</label>
-            <input type="datetime-local" value={doseDateTime} onChange={e => setDoseDateTime(e.target.value)}
+            <input type="datetime-local" value={doseDateTime} max={new Date().toISOString().slice(0, 16)} onChange={e => setDoseDateTime(e.target.value)}
               className="w-full border-2 border-slate-200 rounded-md px-4 py-3 text-body-lg bg-white focus:border-slate-700 focus:outline-none" />
             {isBackdated && (
               <p className="text-body-sm text-amber-500 mt-1">Backdated · {Math.round((Date.now() - new Date(doseDateTime).getTime()) / (1000 * 60 * 60 * 24))} days ago</p>

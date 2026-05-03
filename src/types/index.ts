@@ -1,4 +1,4 @@
-export type Medication = 'ozempic' | 'wegovy' | 'mounjaro' | 'zepbound' | 'saxenda' | 'other'
+export type Medication = 'ozempic' | 'wegovy' | 'mounjaro' | 'zepbound' | 'saxenda' | 'rybelsus' | 'other'
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
 export type FoodSource = 'manual' | 'usda_api' | 'barcode_scan'
 export type SubscriptionTier = 'free' | 'pro'
@@ -28,6 +28,7 @@ export const MEDICATION_INFO: Record<Medication, { brand: string; generic: strin
   mounjaro: { brand: 'Mounjaro', generic: 'tirzepatide', cadence: 'weekly' },
   zepbound: { brand: 'Zepbound', generic: 'tirzepatide', cadence: 'weekly' },
   saxenda: { brand: 'Saxenda', generic: 'liraglutide', cadence: 'daily' },
+  rybelsus: { brand: 'Rybelsus', generic: 'semaglutide (oral)', cadence: 'daily' },
   other: { brand: 'Other / not sure', generic: '', cadence: 'weekly' },
 }
 

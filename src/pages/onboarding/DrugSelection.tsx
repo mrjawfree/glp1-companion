@@ -3,7 +3,7 @@ import OnboardingShell from '../../components/OnboardingShell'
 import { Medication, MEDICATION_INFO } from '../../types'
 import { useOnboarding } from '../../hooks/useOnboarding'
 
-const medications: Medication[] = ['ozempic', 'wegovy', 'mounjaro', 'zepbound', 'saxenda', 'other']
+const medications: Medication[] = ['ozempic', 'wegovy', 'mounjaro', 'zepbound', 'saxenda', 'rybelsus', 'other']
 
 export default function DrugSelection() {
   const navigate = useNavigate()
