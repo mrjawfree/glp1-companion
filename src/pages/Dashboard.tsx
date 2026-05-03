@@ -108,11 +108,11 @@ export default function Dashboard() {
     supabase.from('users').select('display_name, medication, current_dose').eq('id', user.id).single().then(({ data }) => {
       if (data) setProfile(data)
     })
-    supabase.from('dose_logs').select('*').eq('user_id', user.id).order('logged_at', { ascending: false }).limit(1).then(({ data }) => {
+    supabase.from('doses').select('*').eq('user_id', user.id).order('logged_at', { ascending: false }).limit(1).then(({ data }) => {
       if (data?.[0]) setLastDose(data[0])
     })
     const today = new Date().toISOString().split('T')[0]
-    supabase.from('food_entries').select('protein_g, fiber_g').eq('user_id', user.id).gte('logged_at', today).then(({ data }) => {
+    supabase.from('meals').select('protein_g, fiber_g').eq('user_id', user.id).gte('logged_at', today).then(({ data }) => {
       if (data) {
         setTodayProtein(data.reduce((s, e) => s + (e.protein_g || 0), 0))
         setTodayFiber(data.reduce((s, e) => s + (e.fiber_g || 0), 0))
@@ -129,8 +129,8 @@ export default function Dashboard() {
     if (!user) return
     const sevenDaysAgo = new Date()
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6)
-    const { data: foodDays } = await supabase.from('food_entries').select('logged_at').eq('user_id', user.id).gte('logged_at', sevenDaysAgo.toISOString())
-    const { data: doseDays } = await supabase.from('dose_logs').select('logged_at').eq('user_id', user.id).gte('logged_at', sevenDaysAgo.toISOString())
+    const { data: foodDays } = await supabase.from('meals').select('logged_at').eq('user_id', user.id).gte('logged_at', sevenDaysAgo.toISOString())
+    const { data: doseDays } = await supabase.from('doses').select('logged_at').eq('user_id', user.id).gte('logged_at', sevenDaysAgo.toISOString())
 
     const loggedDates = new Set<string>()
     foodDays?.forEach(e => loggedDates.add(new Date(e.logged_at).toISOString().split('T')[0]))

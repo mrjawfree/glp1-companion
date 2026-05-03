@@ -35,12 +35,10 @@ const SIDE_EFFECTS = [
 
 const medications: Medication[] = ['ozempic', 'wegovy', 'mounjaro', 'zepbound', 'saxenda', 'other']
 
-function getSuggestedSite(lastSiteNote: string | null): InjectionSite {
-  if (!lastSiteNote) return 'left_abdomen'
-  const match = lastSiteNote.match(/site:([\w]+)/)
-  if (!match) return 'left_abdomen'
-  const lastSite = match[1] as InjectionSite
-  const idx = SITE_ROTATION.indexOf(lastSite)
+function getSuggestedSite(lastSite: string | null): InjectionSite {
+  if (!lastSite) return 'left_abdomen'
+  const idx = SITE_ROTATION.indexOf(lastSite as InjectionSite)
+  if (idx === -1) return 'left_abdomen'
   return SITE_ROTATION[(idx + 1) % SITE_ROTATION.length]
 }
 
@@ -63,7 +61,7 @@ export default function DoseLog() {
   const loadDoses = useCallback(async () => {
     if (!user) return
     let query = supabase
-      .from('dose_logs')
+      .from('doses')
       .select('*')
       .eq('user_id', user.id)
       .order('logged_at', { ascending: false })
@@ -93,8 +91,8 @@ export default function DoseLog() {
       if (data?.medication) setMedication(data.medication as Medication)
       if (data?.current_dose) setDoseAmount(data.current_dose)
     })
-    supabase.from('dose_logs').select('notes').eq('user_id', user.id).order('logged_at', { ascending: false }).limit(1).then(({ data }) => {
-      const suggested = getSuggestedSite(data?.[0]?.notes || null)
+    supabase.from('doses').select('injection_site').eq('user_id', user.id).order('logged_at', { ascending: false }).limit(1).then(({ data }) => {
+      const suggested = getSuggestedSite(data?.[0]?.injection_site || null)
       setSuggestedSite(suggested)
       setInjectionSite(suggested)
     })
@@ -118,13 +116,14 @@ export default function DoseLog() {
     setShowDoubleLogConfirm(false)
     setSaving(true)
     const loggedAt = new Date(doseDateTime).toISOString()
-    const { error } = await supabase.from('dose_logs').insert({
+    const { error } = await supabase.from('doses').insert({
       user_id: user!.id,
       medication,
       dose_amount: doseAmount,
       logged_at: loggedAt,
+      injection_site: injectionSite,
       side_effects: null,
-      notes: `site:${injectionSite}${notes ? ' | ' + notes : ''}`,
+      notes: notes || null,
     })
     if (!error) {
       setView('checkin')
@@ -135,7 +134,7 @@ export default function DoseLog() {
 
   async function handleCheckin() {
     if (doses[0] && sideEffects.length > 0) {
-      await supabase.from('dose_logs').update({
+      await supabase.from('doses').update({
         side_effects: sideEffects,
         notes: `${doses[0].notes || ''} | energy:${energyLevel}`,
       }).eq('id', doses[0].id)

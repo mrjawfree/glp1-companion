@@ -69,7 +69,7 @@ export default function FoodLog() {
     const nextDay = new Date(selectedDate)
     nextDay.setDate(nextDay.getDate() + 1)
     const { data } = await supabase
-      .from('food_entries')
+      .from('meals')
       .select('*')
       .eq('user_id', user!.id)
       .gte('logged_at', selectedDate)
@@ -81,7 +81,7 @@ export default function FoodLog() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
-    const { error } = await supabase.from('food_entries').insert({
+    const { error } = await supabase.from('meals').insert({
       user_id: user!.id,
       meal_type: mealType,
       food_name: foodName,
