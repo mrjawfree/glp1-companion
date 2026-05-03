@@ -1,0 +1,6 @@
+export type Medication = 'ozempic' | 'wegovy' | 'mounjaro' | 'other'
+export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
+export type FoodSource = 'manual' | 'usda_api' | 'barcode_scan'
+export type SubscriptionTier = 'free' | 'pro'
+export type SubscriptionPlan = 'monthly_9' | 'monthly_19'
+export type SubscriptionStatus = 'active' | 'cancelled' | 'past_due' | 'trialing'
