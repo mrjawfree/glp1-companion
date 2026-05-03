@@ -25,6 +25,7 @@ export default function Layout() {
     { label: 'Log food', path: '/food' },
     { label: 'Log dose', path: '/doses' },
     { label: 'Log weight', path: '/progress' },
+    { label: 'Log feeling', path: '/doses?checkin=true' },
   ]
 
   return (

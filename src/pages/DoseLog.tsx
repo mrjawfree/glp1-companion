@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { Medication, MEDICATION_INFO } from '../types'
@@ -44,8 +45,11 @@ function getSuggestedSite(lastSite: string | null): InjectionSite {
 
 export default function DoseLog() {
   const { user } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [doses, setDoses] = useState<DoseEntry[]>([])
-  const [view, setView] = useState<'history' | 'log' | 'checkin'>('history')
+  const [view, setView] = useState<'history' | 'log' | 'checkin'>(() =>
+    searchParams.get('checkin') === 'true' ? 'checkin' : 'history'
+  )
   const [medication, setMedication] = useState<Medication>('ozempic')
   const [doseAmount, setDoseAmount] = useState('')
   const [injectionSite, setInjectionSite] = useState<InjectionSite>('left_abdomen')
@@ -134,12 +138,17 @@ export default function DoseLog() {
 
   async function handleCheckin() {
     if (doses[0] && sideEffects.length > 0) {
-      await supabase.from('doses').update({
-        side_effects: sideEffects,
-        notes: `${doses[0].notes || ''} | energy:${energyLevel}`,
-      }).eq('id', doses[0].id)
+      const rows = sideEffects.map(symptom => ({
+        user_id: user!.id,
+        dose_id: doses[0].id,
+        symptom,
+        severity: symptom === 'nausea' ? 3 : 2,
+        energy_level: energyLevel,
+      }))
+      await supabase.from('side_effects').insert(rows)
       loadDoses()
     }
+    setSearchParams({})
     setView('history')
     setSideEffects([])
     setNotes('')

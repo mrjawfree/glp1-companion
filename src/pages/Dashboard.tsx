@@ -163,7 +163,10 @@ export default function Dashboard() {
   const displayName = profile?.display_name || user?.email?.split('@')[0] || 'there'
 
   const getDoseStatus = () => {
-    if (!lastDose) return { status: 'none' as const, label: 'Add your medication to get started' }
+    if (!profile?.medication || profile.medication === 'other') {
+      return { status: 'none' as const, label: 'Set up your dose schedule to get tracking' }
+    }
+    if (!lastDose) return { status: 'none' as const, label: 'No doses logged yet — tap to log your first' }
     const doseDate = new Date(lastDose.logged_at)
     const now = new Date()
     const hoursSince = (now.getTime() - doseDate.getTime()) / (1000 * 60 * 60)
