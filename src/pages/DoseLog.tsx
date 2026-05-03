@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { Medication, MEDICATION_INFO } from '../types'
 
 interface DoseEntry {
   id: string
@@ -11,34 +12,70 @@ interface DoseEntry {
   notes: string | null
 }
 
-const medications = ['ozempic', 'wegovy', 'mounjaro', 'other'] as const
-const commonSideEffects = ['nausea', 'fatigue', 'headache', 'constipation', 'diarrhea', 'injection site pain']
+type InjectionSite = 'left_abdomen' | 'right_abdomen' | 'left_thigh' | 'right_thigh'
+
+const INJECTION_SITES: { value: InjectionSite; label: string }[] = [
+  { value: 'left_abdomen', label: 'Left abdomen' },
+  { value: 'right_abdomen', label: 'Right abdomen' },
+  { value: 'left_thigh', label: 'Left thigh' },
+  { value: 'right_thigh', label: 'Right thigh' },
+]
+
+const SIDE_EFFECTS = [
+  { key: 'nausea', label: 'Nausea', hasSeverity: true },
+  { key: 'reflux', label: 'Reflux', hasSeverity: false },
+  { key: 'fatigue', label: 'Fatigue', hasSeverity: false },
+  { key: 'constipation', label: 'Constipation', hasSeverity: false },
+  { key: 'headache', label: 'Headache', hasSeverity: false },
+  { key: 'low_appetite', label: 'Low appetite', hasSeverity: false },
+  { key: 'feeling_good', label: 'Feeling good', hasSeverity: false },
+]
+
+const medications: Medication[] = ['ozempic', 'wegovy', 'mounjaro', 'zepbound', 'saxenda', 'other']
 
 export default function DoseLog() {
   const { user } = useAuth()
   const [doses, setDoses] = useState<DoseEntry[]>([])
-  const [showForm, setShowForm] = useState(false)
-  const [medication, setMedication] = useState<string>('ozempic')
+  const [view, setView] = useState<'history' | 'log' | 'checkin'>('history')
+  const [medication, setMedication] = useState<Medication>('ozempic')
   const [doseAmount, setDoseAmount] = useState('')
+  const [injectionSite, setInjectionSite] = useState<InjectionSite>('left_abdomen')
   const [sideEffects, setSideEffects] = useState<string[]>([])
+  const [energyLevel, setEnergyLevel] = useState(3)
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
+  const [filter, setFilter] = useState<'all' | '30' | 'year'>('all')
 
   useEffect(() => {
     if (user) loadDoses()
   }, [user])
 
   async function loadDoses() {
-    const { data } = await supabase
+    let query = supabase
       .from('dose_logs')
       .select('*')
       .eq('user_id', user!.id)
       .order('logged_at', { ascending: false })
-      .limit(30)
+
+    if (filter === '30') {
+      const d = new Date()
+      d.setDate(d.getDate() - 30)
+      query = query.gte('logged_at', d.toISOString())
+    } else if (filter === 'year') {
+      const d = new Date()
+      d.setFullYear(d.getFullYear() - 1)
+      query = query.gte('logged_at', d.toISOString())
+    } else {
+      const d = new Date()
+      d.setDate(d.getDate() - 90)
+      query = query.gte('logged_at', d.toISOString())
+    }
+
+    const { data } = await query
     if (data) setDoses(data)
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleLogDose(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
     const { error } = await supabase.from('dose_logs').insert({
@@ -46,125 +83,239 @@ export default function DoseLog() {
       medication,
       dose_amount: doseAmount,
       logged_at: new Date().toISOString(),
-      side_effects: sideEffects.length > 0 ? sideEffects : null,
-      notes: notes || null,
+      side_effects: null,
+      notes: `site:${injectionSite}${notes ? ' | ' + notes : ''}`,
     })
     if (!error) {
-      setShowForm(false)
-      setDoseAmount('')
-      setSideEffects([])
-      setNotes('')
+      setView('checkin')
       loadDoses()
     }
     setSaving(false)
   }
 
-  function toggleSideEffect(effect: string) {
+  async function handleCheckin() {
+    if (doses[0] && sideEffects.length > 0) {
+      await supabase.from('dose_logs').update({
+        side_effects: sideEffects,
+        notes: `${doses[0].notes || ''} | energy:${energyLevel}`,
+      }).eq('id', doses[0].id)
+      loadDoses()
+    }
+    setView('history')
+    setSideEffects([])
+    setNotes('')
+    setDoseAmount('')
+  }
+
+  const toggleSideEffect = (effect: string) => {
     setSideEffects(prev =>
       prev.includes(effect) ? prev.filter(e => e !== effect) : [...prev, effect]
     )
   }
 
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-800">Dose Log</h2>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="px-4 py-2 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700"
-        >
-          + Log Dose
-        </button>
-      </div>
+  const groupedDoses = doses.reduce<Record<string, DoseEntry[]>>((acc, dose) => {
+    const month = new Date(dose.logged_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
+    if (!acc[month]) acc[month] = []
+    acc[month].push(dose)
+    return acc
+  }, {})
 
-      {showForm && (
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 space-y-4">
+  if (view === 'log') {
+    return (
+      <div className="px-4 pt-5">
+        <div className="flex items-center gap-3 mb-6">
+          <button onClick={() => setView('history')} className="text-slate-500">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M15 19L8 12L15 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </button>
+          <h1 className="text-display-lg text-slate-900">Log your dose</h1>
+        </div>
+
+        <form onSubmit={handleLogDose} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Medication</label>
-            <select
-              value={medication}
-              onChange={e => setMedication(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-            >
-              {medications.map(m => (
-                <option key={m} value={m}>{m.charAt(0).toUpperCase() + m.slice(1)}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Dose Amount</label>
-            <input
-              type="text"
-              value={doseAmount}
-              onChange={e => setDoseAmount(e.target.value)}
-              placeholder="e.g. 0.25mg"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Side Effects</label>
-            <div className="flex flex-wrap gap-2">
-              {commonSideEffects.map(effect => (
+            <label className="text-label text-slate-500 uppercase mb-2 block">Medication</label>
+            <div className="flex gap-2 flex-wrap">
+              {medications.map(med => (
                 <button
-                  key={effect}
+                  key={med}
                   type="button"
-                  onClick={() => toggleSideEffect(effect)}
-                  className={`px-3 py-1 text-xs rounded-full border ${
-                    sideEffects.includes(effect)
-                      ? 'bg-primary-100 border-primary-300 text-primary-700'
-                      : 'border-gray-300 text-gray-600'
+                  onClick={() => setMedication(med)}
+                  className={`px-4 py-2 rounded-pill text-body-md transition-colors ${
+                    medication === med
+                      ? 'bg-slate-700 text-white'
+                      : 'bg-white border border-slate-200 text-slate-700'
                   }`}
                 >
-                  {effect}
+                  {MEDICATION_INFO[med].brand}
                 </button>
               ))}
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-            <textarea
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-              rows={2}
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={saving}
-            className="w-full py-2 bg-primary-600 text-white rounded-lg font-medium disabled:opacity-50"
-          >
-            {saving ? 'Saving...' : 'Save Dose'}
-          </button>
-        </form>
-      )}
 
-      <div className="space-y-2">
-        {doses.map(dose => (
-          <div key={dose.id} className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="font-medium text-gray-800 capitalize">{dose.medication}</p>
-                <p className="text-sm text-gray-500">{dose.dose_amount}</p>
-              </div>
-              <p className="text-xs text-gray-400">
-                {new Date(dose.logged_at).toLocaleDateString()}
-              </p>
+          <div>
+            <label className="text-label text-slate-500 uppercase mb-2 block">Dose (mg)</label>
+            <div className="flex items-center gap-3">
+              <button type="button" onClick={() => setDoseAmount(String(Math.max(0, parseFloat(doseAmount || '0') - 0.25)))}
+                className="w-11 h-11 rounded-md bg-slate-100 text-slate-700 flex items-center justify-center text-title-lg">−</button>
+              <input type="number" step="0.25" value={doseAmount} onChange={e => setDoseAmount(e.target.value)}
+                placeholder="0.00" className="flex-1 border-2 border-slate-200 rounded-md px-4 py-3 text-body-lg text-center bg-white focus:border-slate-700 focus:outline-none" required />
+              <button type="button" onClick={() => setDoseAmount(String(parseFloat(doseAmount || '0') + 0.25))}
+                className="w-11 h-11 rounded-md bg-slate-100 text-slate-700 flex items-center justify-center text-title-lg">+</button>
             </div>
-            {dose.side_effects && (
-              <div className="mt-2 flex flex-wrap gap-1">
-                {dose.side_effects.map(e => (
-                  <span key={e} className="text-xs bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full">{e}</span>
+          </div>
+
+          <div>
+            <label className="text-label text-slate-500 uppercase mb-2 block">Injection site</label>
+            <div className="bg-white rounded-md border-2 border-slate-200 p-4">
+              <svg viewBox="0 0 200 300" className="w-40 mx-auto mb-3" fill="none">
+                <ellipse cx="100" cy="40" rx="20" ry="25" stroke="#C2CCD9" strokeWidth="1.5" />
+                <line x1="100" y1="65" x2="100" y2="170" stroke="#C2CCD9" strokeWidth="1.5" />
+                <line x1="100" y1="90" x2="60" y2="140" stroke="#C2CCD9" strokeWidth="1.5" />
+                <line x1="100" y1="90" x2="140" y2="140" stroke="#C2CCD9" strokeWidth="1.5" />
+                <line x1="100" y1="170" x2="75" y2="270" stroke="#C2CCD9" strokeWidth="1.5" />
+                <line x1="100" y1="170" x2="125" y2="270" stroke="#C2CCD9" strokeWidth="1.5" />
+                <circle cx="80" cy="140" r="14" fill={injectionSite === 'left_abdomen' ? '#4A7C5C' : '#EDF1F6'}
+                  stroke={injectionSite === 'left_abdomen' ? '#4A7C5C' : '#C2CCD9'} strokeWidth="1.5" className="cursor-pointer"
+                  onClick={() => setInjectionSite('left_abdomen')} />
+                <circle cx="120" cy="140" r="14" fill={injectionSite === 'right_abdomen' ? '#4A7C5C' : '#EDF1F6'}
+                  stroke={injectionSite === 'right_abdomen' ? '#4A7C5C' : '#C2CCD9'} strokeWidth="1.5" className="cursor-pointer"
+                  onClick={() => setInjectionSite('right_abdomen')} />
+                <circle cx="80" cy="220" r="12" fill={injectionSite === 'left_thigh' ? '#4A7C5C' : '#EDF1F6'}
+                  stroke={injectionSite === 'left_thigh' ? '#4A7C5C' : '#C2CCD9'} strokeWidth="1.5" className="cursor-pointer"
+                  onClick={() => setInjectionSite('left_thigh')} />
+                <circle cx="120" cy="220" r="12" fill={injectionSite === 'right_thigh' ? '#4A7C5C' : '#EDF1F6'}
+                  stroke={injectionSite === 'right_thigh' ? '#4A7C5C' : '#C2CCD9'} strokeWidth="1.5" className="cursor-pointer"
+                  onClick={() => setInjectionSite('right_thigh')} />
+              </svg>
+              <div className="grid grid-cols-2 gap-2">
+                {INJECTION_SITES.map(site => (
+                  <button key={site.value} type="button" onClick={() => setInjectionSite(site.value)}
+                    className={`px-3 py-2 rounded-md text-body-sm transition-colors ${
+                      injectionSite === site.value ? 'bg-green-100 text-green-600 font-medium' : 'bg-slate-100 text-slate-500'
+                    }`}>
+                    {site.label}
+                  </button>
                 ))}
               </div>
-            )}
+            </div>
           </div>
-        ))}
-        {doses.length === 0 && (
-          <p className="text-center text-gray-400 py-8">No doses logged yet. Tap "+ Log Dose" to get started.</p>
-        )}
+
+          <div>
+            <label className="text-label text-slate-500 uppercase mb-2 block">Notes (optional)</label>
+            <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2}
+              className="w-full border-2 border-slate-200 rounded-md px-4 py-3 text-body-lg bg-white focus:border-slate-700 focus:outline-none" />
+          </div>
+
+          <button type="submit" disabled={saving}
+            className="w-full bg-slate-700 text-white py-4 rounded-md text-label uppercase tracking-wider disabled:opacity-40 hover:bg-slate-900 transition-colors">
+            {saving ? 'Logging...' : 'Log dose'}
+          </button>
+          <button type="button" onClick={() => setView('history')} className="w-full text-center text-slate-400 text-body-md py-2">
+            Skip side-effect check-in
+          </button>
+        </form>
       </div>
+    )
+  }
+
+  if (view === 'checkin') {
+    return (
+      <div className="px-4 pt-5">
+        <h1 className="text-display-lg text-slate-900 mb-2">How are you feeling?</h1>
+        <p className="text-body-lg text-slate-500 mb-6">This helps us tune meal suggestions. Skip any time.</p>
+
+        <div className="flex flex-wrap gap-3 mb-6">
+          {SIDE_EFFECTS.map(effect => (
+            <button key={effect.key} onClick={() => toggleSideEffect(effect.key)}
+              className={`px-4 py-3 rounded-md text-body-md transition-colors ${
+                sideEffects.includes(effect.key)
+                  ? effect.key === 'feeling_good' ? 'bg-green-100 text-green-600 border border-green-400' : 'bg-amber-100 text-amber-500 border border-amber-500'
+                  : 'bg-white border border-slate-200 text-slate-700'
+              }`}>
+              {effect.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="mb-6">
+          <label className="text-label text-slate-500 uppercase mb-3 block">Energy level</label>
+          <div className="flex items-center gap-4">
+            <span className="text-body-sm text-slate-400">Drained</span>
+            <input type="range" min="1" max="5" value={energyLevel} onChange={e => setEnergyLevel(parseInt(e.target.value))}
+              className="flex-1 accent-slate-700" />
+            <span className="text-body-sm text-slate-400">Energized</span>
+          </div>
+        </div>
+
+        <button onClick={handleCheckin}
+          className="w-full bg-slate-700 text-white py-4 rounded-md text-label uppercase tracking-wider hover:bg-slate-900 transition-colors mb-3">
+          Save check-in
+        </button>
+        <button onClick={() => { setView('history'); setSideEffects([]) }}
+          className="w-full text-center text-slate-400 text-body-md py-2">
+          Skip
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="px-4 pt-5">
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-title-lg text-slate-900">Dose History</h1>
+        <button onClick={() => setView('log')}
+          className="px-4 py-2 bg-slate-700 text-white text-label rounded-md hover:bg-slate-900 transition-colors">
+          Log dose
+        </button>
+      </div>
+
+      <div className="flex gap-2 mb-5">
+        {[{ key: 'all', label: 'Last 90 days' }, { key: '30', label: 'Last 30 days' }, { key: 'year', label: 'This year' }].map(f => (
+          <button key={f.key} onClick={() => { setFilter(f.key as typeof filter); loadDoses() }}
+            className={`px-3 py-1.5 rounded-pill text-body-sm transition-colors ${
+              filter === f.key ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-500'
+            }`}>
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      {Object.entries(groupedDoses).map(([month, entries]) => (
+        <div key={month} className="mb-5">
+          <h3 className="text-label text-slate-400 uppercase mb-3">{month}</h3>
+          <div className="space-y-2">
+            {entries.map(dose => (
+              <div key={dose.id} className="bg-white rounded-md p-4 shadow-elevation-1">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-body-md font-semibold text-slate-900 capitalize">{dose.medication}</p>
+                    <p className="text-body-sm text-slate-500">{dose.dose_amount}mg</p>
+                  </div>
+                  <p className="text-body-sm text-slate-400">
+                    {new Date(dose.logged_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </p>
+                </div>
+                {dose.side_effects && dose.side_effects.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {dose.side_effects.slice(0, 3).map(e => (
+                      <span key={e} className="text-body-sm bg-amber-100 text-amber-500 px-2 py-0.5 rounded-pill">{e}</span>
+                    ))}
+                    {dose.side_effects.length > 3 && (
+                      <span className="text-body-sm text-slate-400">+{dose.side_effects.length - 3}</span>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      {doses.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-body-lg text-slate-400 mb-2">Your first logged dose will appear here.</p>
+          <button onClick={() => setView('log')} className="text-info text-body-md">Log your first dose</button>
+        </div>
+      )}
     </div>
   )
 }
