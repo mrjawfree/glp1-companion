@@ -48,7 +48,7 @@ export default function DoseLog() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [doses, setDoses] = useState<DoseEntry[]>([])
   const [view, setView] = useState<'history' | 'log' | 'checkin'>(() =>
-    searchParams.get('checkin') === 'true' ? 'checkin' : 'history'
+    searchParams.get('checkin') === 'true' ? 'checkin' : searchParams.get('log') === 'true' ? 'log' : 'history'
   )
   const [medication, setMedication] = useState<Medication>('ozempic')
   const [doseAmount, setDoseAmount] = useState('')

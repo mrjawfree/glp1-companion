@@ -190,7 +190,7 @@ export default function Dashboard() {
       </div>
 
       <button
-        onClick={() => navigate('/doses')}
+        onClick={() => navigate(doseStatus.status === 'logged' ? '/doses' : '/doses?log=true')}
         className={`w-full rounded-md p-5 mb-5 text-left transition-colors ${
           doseStatus.status === 'logged' ? 'bg-green-100 border border-green-400' :
           doseStatus.status === 'overdue' ? 'bg-amber-100 border border-amber-500' :
