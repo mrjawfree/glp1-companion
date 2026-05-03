@@ -12,6 +12,10 @@ export default function Profile() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
+  const isOtherMed = data.medication === 'other'
+  const totalSteps = isOtherMed ? 4 : 5
+  const step = isOtherMed ? 3 : 4
+
   const handleComplete = async () => {
     if (!user) return
     setSaving(true)
@@ -27,7 +31,7 @@ export default function Profile() {
         start_date: data.lastDoseDate,
       })
       if (upsertError) throw upsertError
-      navigate('/')
+      navigate('/onboarding/notifications')
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to save profile')
     } finally {
@@ -36,7 +40,7 @@ export default function Profile() {
   }
 
   return (
-    <OnboardingShell step={4} totalSteps={5} onBack={() => navigate('/onboarding/goals')}>
+    <OnboardingShell step={step} totalSteps={totalSteps} onBack={() => navigate('/onboarding/goals')}>
       <h1 className="text-display-lg text-slate-900 mb-2">Almost there</h1>
       <p className="text-body-lg text-slate-500 mb-6">
         A few basics so we can personalize your experience.
@@ -91,6 +95,8 @@ export default function Profile() {
             <label className="text-label text-slate-500 uppercase mb-2 block">Birth year</label>
             <input
               type="number"
+              min={1920}
+              max={2010}
               value={data.birthYear ?? ''}
               onChange={(e) => update({ birthYear: e.target.value ? parseInt(e.target.value) : null })}
               placeholder="1988"

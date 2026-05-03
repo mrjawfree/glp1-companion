@@ -8,9 +8,10 @@ const medications: Medication[] = ['ozempic', 'wegovy', 'mounjaro', 'zepbound', 
 export default function DrugSelection() {
   const navigate = useNavigate()
   const { data, update } = useOnboarding()
+  const totalSteps = data.medication === 'other' ? 4 : 5
 
   return (
-    <OnboardingShell step={1} totalSteps={5} onBack={() => navigate('/onboarding')}>
+    <OnboardingShell step={1} totalSteps={totalSteps} onBack={() => navigate('/onboarding')}>
       <h1 className="text-display-lg text-slate-900 mb-2">Which medication are you on?</h1>
       <p className="text-body-lg text-slate-500 mb-6">
         We'll tailor reminders and meal suggestions to your dosing schedule.

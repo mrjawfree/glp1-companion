@@ -16,10 +16,13 @@ export default function Goals() {
     }
   }
 
-  const backPath = data.medication === 'other' ? '/onboarding/drug' : '/onboarding/schedule'
+  const isOtherMed = data.medication === 'other'
+  const totalSteps = isOtherMed ? 4 : 5
+  const step = isOtherMed ? 2 : 3
+  const backPath = isOtherMed ? '/onboarding/drug' : '/onboarding/schedule'
 
   return (
-    <OnboardingShell step={3} totalSteps={5} onBack={() => navigate(backPath)}>
+    <OnboardingShell step={step} totalSteps={totalSteps} onBack={() => navigate(backPath)}>
       <h1 className="text-display-lg text-slate-900 mb-2">What matters most right now?</h1>
       <p className="text-body-lg text-slate-500 mb-6">
         Pick up to two. You can change this any time.

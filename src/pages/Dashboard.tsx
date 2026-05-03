@@ -23,8 +23,8 @@ function getGreeting() {
   return 'Good evening'
 }
 
-function NutritionRing({ protein, fiber, proteinGoal, fiberGoal }: {
-  protein: number; fiber: number; proteinGoal: number; fiberGoal: number
+function NutritionRing({ protein, fiber, hydration, proteinGoal, fiberGoal }: {
+  protein: number; fiber: number; hydration: number; proteinGoal: number; fiberGoal: number
 }) {
   const size = 160
   const cx = size / 2
@@ -52,15 +52,42 @@ function NutritionRing({ protein, fiber, proteinGoal, fiberGoal }: {
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         {drawArc(68, protein / proteinGoal, '#4A7C5C', 10)}
         {drawArc(54, fiber / fiberGoal, '#8995A8', 8)}
-        {drawArc(42, 0 / 8, '#C2CCD9', 6)}
+        {drawArc(42, hydration / 8, '#C2CCD9', 6)}
         <text x={cx} y={cy - 6} textAnchor="middle" className="fill-slate-900 font-semibold" fontSize="20">{protein}g</text>
         <text x={cx} y={cy + 14} textAnchor="middle" className="fill-slate-500" fontSize="12">protein</text>
       </svg>
       <div className="flex gap-4 mt-3 text-body-sm text-slate-500">
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-600" />Protein</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-slate-400" />Fiber</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-slate-300" />Water</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-slate-300" />Water ({hydration}/8)</span>
       </div>
+    </div>
+  )
+}
+
+function StreakRow({ streak, days }: { streak: number; days: ('logged' | 'partial' | 'missed' | 'today' | 'future')[] }) {
+  const colors = {
+    logged: 'bg-green-600',
+    partial: 'bg-green-400',
+    missed: 'bg-slate-200',
+    today: 'bg-slate-700',
+    future: 'bg-slate-100',
+  }
+  return (
+    <div className="bg-white rounded-md shadow-elevation-1 p-4 mb-5">
+      <p className="text-body-md text-slate-900 font-semibold mb-3">
+        {streak > 0 ? `${streak}-day check-in streak` : 'Start your streak today'}
+      </p>
+      <div className="flex gap-1.5">
+        {days.map((d, i) => (
+          <div key={i} className={`w-8 h-8 rounded-full ${colors[d]} flex items-center justify-center`}>
+            {d === 'logged' && <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 9L10 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+          </div>
+        ))}
+      </div>
+      {streak === 0 && (
+        <p className="text-body-sm text-slate-400 mt-2">Log a dose or a meal to start.</p>
+      )}
     </div>
   )
 }
@@ -72,6 +99,9 @@ export default function Dashboard() {
   const [lastDose, setLastDose] = useState<DoseEntry | null>(null)
   const [todayProtein, setTodayProtein] = useState(0)
   const [todayFiber, setTodayFiber] = useState(0)
+  const [hydration, setHydration] = useState(0)
+  const [streak, setStreak] = useState(0)
+  const [streakDays, setStreakDays] = useState<('logged' | 'partial' | 'missed' | 'today' | 'future')[]>([])
 
   useEffect(() => {
     if (!user) return
@@ -88,7 +118,47 @@ export default function Dashboard() {
         setTodayFiber(data.reduce((s, e) => s + (e.fiber_g || 0), 0))
       }
     })
+
+    const savedHydration = localStorage.getItem(`glp1_hydration_${today}`)
+    if (savedHydration) setHydration(parseInt(savedHydration))
+
+    computeStreak()
   }, [user])
+
+  async function computeStreak() {
+    if (!user) return
+    const sevenDaysAgo = new Date()
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6)
+    const { data: foodDays } = await supabase.from('food_entries').select('logged_at').eq('user_id', user.id).gte('logged_at', sevenDaysAgo.toISOString())
+    const { data: doseDays } = await supabase.from('dose_logs').select('logged_at').eq('user_id', user.id).gte('logged_at', sevenDaysAgo.toISOString())
+
+    const loggedDates = new Set<string>()
+    foodDays?.forEach(e => loggedDates.add(new Date(e.logged_at).toISOString().split('T')[0]))
+    doseDays?.forEach(e => loggedDates.add(new Date(e.logged_at).toISOString().split('T')[0]))
+
+    const today = new Date()
+    const todayStr = today.toISOString().split('T')[0]
+    const days: ('logged' | 'partial' | 'missed' | 'today' | 'future')[] = []
+    let count = 0
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date()
+      d.setDate(d.getDate() - i)
+      const ds = d.toISOString().split('T')[0]
+      if (ds === todayStr) {
+        days.push(loggedDates.has(ds) ? 'logged' : 'today')
+      } else if (loggedDates.has(ds)) {
+        days.push('logged')
+      } else {
+        days.push('missed')
+      }
+    }
+    for (let i = days.length - 1; i >= 0; i--) {
+      if (days[i] === 'logged') count++
+      else break
+    }
+    setStreak(count)
+    setStreakDays(days)
+  }
 
   const displayName = profile?.display_name || user?.email?.split('@')[0] || 'there'
 
@@ -146,8 +216,10 @@ export default function Dashboard() {
       </button>
 
       <div className="bg-white rounded-md shadow-elevation-1 p-5 mb-5 flex justify-center">
-        <NutritionRing protein={todayProtein} fiber={todayFiber} proteinGoal={90} fiberGoal={25} />
+        <NutritionRing protein={todayProtein} fiber={todayFiber} hydration={hydration} proteinGoal={90} fiberGoal={25} />
       </div>
+
+      <StreakRow streak={streak} days={streakDays} />
 
       <div className="mb-5">
         <h2 className="text-title-md text-slate-900 mb-3">Gentle picks for today</h2>
