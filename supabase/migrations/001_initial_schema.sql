@@ -5,7 +5,7 @@ create table public.users (
   id uuid primary key references auth.users(id) on delete cascade,
   display_name text,
   email text,
-  medication text check (medication in ('ozempic', 'wegovy', 'mounjaro', 'other')),
+  medication text check (medication in ('ozempic', 'wegovy', 'mounjaro', 'zepbound', 'saxenda', 'other')),
   current_dose text,
   start_date date,
   subscription_tier text default 'free' check (subscription_tier in ('free', 'pro')),
@@ -18,7 +18,7 @@ create table public.users (
 create table public.dose_logs (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.users(id) on delete cascade,
-  medication text not null check (medication in ('ozempic', 'wegovy', 'mounjaro', 'other')),
+  medication text not null check (medication in ('ozempic', 'wegovy', 'mounjaro', 'zepbound', 'saxenda', 'other')),
   dose_amount text not null,
   logged_at timestamptz not null default now(),
   side_effects text[],
