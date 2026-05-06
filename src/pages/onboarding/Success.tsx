@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useOnboarding } from '../../hooks/useOnboarding'
 
@@ -7,19 +7,17 @@ export default function Success() {
   const { reset } = useOnboarding()
   const timerRef = useRef<ReturnType<typeof setTimeout>>()
 
-  useEffect(() => {
-    timerRef.current = setTimeout(() => {
-      handleGoToDashboard()
-    }, 1800)
-    return () => clearTimeout(timerRef.current)
-  }, [])
-
-  const handleGoToDashboard = () => {
+  const handleGoToDashboard = useCallback(() => {
     clearTimeout(timerRef.current)
     localStorage.removeItem('glp1_onboarding_route')
     reset()
     navigate('/', { replace: true })
-  }
+  }, [navigate, reset])
+
+  useEffect(() => {
+    timerRef.current = setTimeout(handleGoToDashboard, 1800)
+    return () => clearTimeout(timerRef.current)
+  }, [handleGoToDashboard])
 
   return (
     <div className="min-h-screen bg-warm-white flex flex-col items-center justify-center px-4 text-center">

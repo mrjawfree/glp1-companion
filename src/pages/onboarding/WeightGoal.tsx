@@ -28,8 +28,9 @@ export default function WeightGoal() {
 
   const handleContinue = () => {
     if (!validate()) return
-    if (data.goalWeight !== null && data.currentWeight !== null && data.goalWeight >= data.currentWeight) {
+    if (data.goalWeight !== null && data.currentWeight !== null && data.goalWeight >= data.currentWeight && !warning) {
       setWarning("Your goal is higher than your current weight — is that right?")
+      return
     }
     navigate('/onboarding/review')
   }
