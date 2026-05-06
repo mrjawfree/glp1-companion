@@ -1,20 +1,21 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { useEffect } from 'react'
-import Layout from './components/Layout'
-import Dashboard from './pages/Dashboard'
-import DoseLog from './pages/DoseLog'
-import MealPlans from './pages/MealPlans'
-import FoodLog from './pages/FoodLog'
-import Progress from './pages/Progress'
-import Settings from './pages/Settings'
-import Login from './pages/Login'
-import Welcome from './pages/onboarding/Welcome'
-import ProfileSetup from './pages/onboarding/ProfileSetup'
-import GoalSetting from './pages/onboarding/GoalSetting'
-import NotificationPrimer from './pages/onboarding/NotificationPrimer'
-import FirstAction from './pages/onboarding/FirstAction'
+import { useEffect, lazy, Suspense } from 'react'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { OnboardingProvider } from './hooks/useOnboarding'
+
+const Layout = lazy(() => import('./components/Layout'))
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const DoseLog = lazy(() => import('./pages/DoseLog'))
+const MealPlans = lazy(() => import('./pages/MealPlans'))
+const FoodLog = lazy(() => import('./pages/FoodLog'))
+const Progress = lazy(() => import('./pages/Progress'))
+const Settings = lazy(() => import('./pages/Settings'))
+const Login = lazy(() => import('./pages/Login'))
+const Welcome = lazy(() => import('./pages/onboarding/Welcome'))
+const ProfileSetup = lazy(() => import('./pages/onboarding/ProfileSetup'))
+const GoalSetting = lazy(() => import('./pages/onboarding/GoalSetting'))
+const NotificationPrimer = lazy(() => import('./pages/onboarding/NotificationPrimer'))
+const FirstAction = lazy(() => import('./pages/onboarding/FirstAction'))
 
 const ONBOARDING_ROUTE_KEY = 'glp1_onboarding_route'
 
@@ -43,11 +44,16 @@ function OnboardingResume() {
   return <Welcome />
 }
 
+function LoadingFallback() {
+  return <div className="flex items-center justify-center h-screen bg-warm-white text-slate-500">Loading...</div>
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <OnboardingProvider>
         <OnboardingRouteTracker>
+          <Suspense fallback={<LoadingFallback />}>
           <Routes>
             <Route path="/onboarding" element={<OnboardingResume />} />
             <Route path="/onboarding/profile-setup" element={<ProfileSetup />} />
@@ -64,6 +70,7 @@ export default function App() {
               <Route path="settings" element={<Settings />} />
             </Route>
           </Routes>
+          </Suspense>
         </OnboardingRouteTracker>
       </OnboardingProvider>
     </AuthProvider>
