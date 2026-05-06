@@ -202,7 +202,7 @@ export default function Dashboard() {
 
       {showSetupNudge && (
         <button
-          onClick={() => navigate('/onboarding/medication')}
+          onClick={() => navigate('/onboarding/profile-setup')}
           className="w-full rounded-md p-4 mb-5 text-left bg-green-100 border border-green-400 flex items-center gap-3"
         >
           <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center flex-shrink-0">

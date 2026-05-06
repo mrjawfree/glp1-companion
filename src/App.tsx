@@ -9,14 +9,10 @@ import Progress from './pages/Progress'
 import Settings from './pages/Settings'
 import Login from './pages/Login'
 import Welcome from './pages/onboarding/Welcome'
-import MedicationSelect from './pages/onboarding/MedicationSelect'
-import InjectionDays from './pages/onboarding/InjectionDays'
-import DoseSetup from './pages/onboarding/DoseSetup'
-import WeightGoal from './pages/onboarding/WeightGoal'
-import Profile from './pages/onboarding/Profile'
+import ProfileSetup from './pages/onboarding/ProfileSetup'
+import GoalSetting from './pages/onboarding/GoalSetting'
 import NotificationPrimer from './pages/onboarding/NotificationPrimer'
-import ReviewConfirm from './pages/onboarding/ReviewConfirm'
-import Success from './pages/onboarding/Success'
+import FirstAction from './pages/onboarding/FirstAction'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { OnboardingProvider } from './hooks/useOnboarding'
 
@@ -54,14 +50,10 @@ export default function App() {
         <OnboardingRouteTracker>
           <Routes>
             <Route path="/onboarding" element={<OnboardingResume />} />
-            <Route path="/onboarding/medication" element={<MedicationSelect />} />
-            <Route path="/onboarding/injection-days" element={<InjectionDays />} />
+            <Route path="/onboarding/profile-setup" element={<ProfileSetup />} />
+            <Route path="/onboarding/goals" element={<GoalSetting />} />
             <Route path="/onboarding/notifications" element={<NotificationPrimer />} />
-            <Route path="/onboarding/dose" element={<DoseSetup />} />
-            <Route path="/onboarding/weight-goal" element={<WeightGoal />} />
-            <Route path="/onboarding/review" element={<ReviewConfirm />} />
-            <Route path="/onboarding/profile" element={<Profile />} />
-            <Route path="/onboarding/success" element={<Success />} />
+            <Route path="/onboarding/first-action" element={<FirstAction />} />
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
               <Route index element={<Dashboard />} />

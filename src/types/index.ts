@@ -8,8 +8,11 @@ export type DoseCadence = 'weekly' | 'daily'
 export type DoseUnit = 'mg' | 'mL' | 'units'
 export type WeightUnit = 'lb' | 'kg'
 export type Goal = 'weight_loss' | 'blood_sugar' | 'reduce_side_effects' | 'sustainable_habits' | 'more_energy' | 'exploring'
+export type TrackingPreference = 'weight' | 'doses' | 'meals' | 'side_effects'
+export type FirstActionChoice = 'log_injection' | 'meal_plan'
 
 export interface OnboardingData {
+  displayName: string
   medication: Medication | null
   medicationOther: string | null
   injectionDays: number[]
@@ -18,6 +21,8 @@ export interface OnboardingData {
   currentWeight: number | null
   goalWeight: number | null
   weightUnit: WeightUnit
+  trackingPreferences: TrackingPreference[]
+  firstAction: FirstActionChoice | null
 }
 
 export const MEDICATION_INFO: Record<Medication, { brand: string; generic: string; cadence: DoseCadence }> = {
@@ -37,4 +42,11 @@ export const GOALS: { value: Goal; label: string }[] = [
   { value: 'sustainable_habits', label: 'Build sustainable habits' },
   { value: 'more_energy', label: 'More energy' },
   { value: 'exploring', label: 'Just exploring' },
+]
+
+export const TRACKING_OPTIONS: { value: TrackingPreference; label: string; description: string }[] = [
+  { value: 'weight', label: 'Weight', description: 'Track your weight over time' },
+  { value: 'doses', label: 'Doses', description: 'Log injections and dose changes' },
+  { value: 'meals', label: 'Meals', description: 'Plan and log what you eat' },
+  { value: 'side_effects', label: 'Side effects', description: 'Note how you feel day to day' },
 ]

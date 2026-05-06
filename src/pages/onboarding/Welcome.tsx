@@ -1,16 +1,7 @@
 import { useNavigate } from 'react-router-dom'
-import { useOnboarding } from '../../hooks/useOnboarding'
 
 export default function Welcome() {
   const navigate = useNavigate()
-  const { reset } = useOnboarding()
-
-  const handleSkip = () => {
-    reset()
-    localStorage.setItem('glp1_onboarding_skipped', 'true')
-    localStorage.removeItem('glp1_onboarding_route')
-    navigate('/login')
-  }
 
   return (
     <div className="min-h-screen bg-warm-white flex flex-col animate-fade-in">
@@ -29,20 +20,14 @@ export default function Welcome() {
           Track doses, plan meals that work with your medication, and notice how you feel.
         </p>
         <button
-          onClick={() => navigate('/onboarding/medication')}
+          onClick={() => navigate('/onboarding/profile-setup')}
           className="w-full max-w-sm bg-slate-700 text-white py-4 rounded-md text-label uppercase tracking-wider hover:bg-slate-900 transition-colors"
         >
           Get started
         </button>
         <button
-          onClick={handleSkip}
-          className="mt-4 text-slate-400 text-body-md hover:underline"
-        >
-          Skip for now
-        </button>
-        <button
           onClick={() => navigate('/login')}
-          className="mt-2 text-info text-body-md hover:underline"
+          className="mt-4 text-info text-body-md hover:underline"
         >
           I already have an account
         </button>

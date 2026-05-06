@@ -4,6 +4,7 @@ import { OnboardingData } from '../types'
 const STORAGE_KEY = 'glp1_onboarding'
 
 const defaultData: OnboardingData = {
+  displayName: '',
   medication: null,
   medicationOther: null,
   injectionDays: [],
@@ -12,6 +13,8 @@ const defaultData: OnboardingData = {
   currentWeight: null,
   goalWeight: null,
   weightUnit: 'lb',
+  trackingPreferences: [],
+  firstAction: null,
 }
 
 interface OnboardingContextType {

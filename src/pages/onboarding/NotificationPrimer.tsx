@@ -8,14 +8,15 @@ export default function NotificationPrimer() {
     if ('Notification' in window) {
       await Notification.requestPermission()
     }
-    navigate('/onboarding/dose')
+    navigate('/onboarding/first-action')
   }
 
   return (
     <OnboardingShell
       step={3}
-      totalSteps={7}
-      onBack={() => navigate('/onboarding/injection-days')}
+      totalSteps={4}
+      onBack={() => navigate('/onboarding/goals')}
+      onSkip={() => navigate('/onboarding/first-action')}
     >
       <div className="flex-1 flex flex-col items-center justify-center text-center">
         <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mb-6">
@@ -26,7 +27,7 @@ export default function NotificationPrimer() {
         </div>
         <h1 className="text-display-lg text-slate-900 mb-3">Stay on track with reminders</h1>
         <p className="text-body-lg text-slate-500 mb-8 max-w-sm">
-          We'll send a gentle nudge on dose days and when it's time to log meals. You can change this any time in Settings.
+          We'll send a gentle nudge on injection days and when it's time to log meals. You can change this any time in Settings.
         </p>
       </div>
 
@@ -38,7 +39,7 @@ export default function NotificationPrimer() {
           Enable notifications
         </button>
         <button
-          onClick={() => navigate('/onboarding/dose')}
+          onClick={() => navigate('/onboarding/first-action')}
           className="w-full text-center text-slate-400 text-body-md py-2"
         >
           Not now
