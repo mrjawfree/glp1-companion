@@ -31,17 +31,17 @@ export default function WeightGoal() {
     if (data.goalWeight !== null && data.currentWeight !== null && data.goalWeight >= data.currentWeight) {
       setWarning("Your goal is higher than your current weight — is that right?")
     }
-    navigate('/onboarding/profile')
+    navigate('/onboarding/review')
   }
 
   return (
     <OnboardingShell
-      step={4}
-      totalSteps={4}
+      step={5}
+      totalSteps={7}
       onBack={() => navigate('/onboarding/dose')}
       onSkip={() => {
         update({ currentWeight: null, goalWeight: null })
-        navigate('/onboarding/profile')
+        navigate('/onboarding/review')
       }}
     >
       <h1 className="text-display-lg text-slate-900 mb-2">Set a weight goal</h1>
@@ -105,7 +105,7 @@ export default function WeightGoal() {
         <button
           onClick={() => {
             update({ currentWeight: null, goalWeight: null })
-            navigate('/onboarding/profile')
+            navigate('/onboarding/review')
           }}
           className="w-full text-slate-400 py-2 text-body-md hover:text-slate-600 transition-colors"
         >

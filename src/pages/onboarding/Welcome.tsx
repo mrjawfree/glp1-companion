@@ -26,8 +26,14 @@ export default function Welcome() {
           Get started
         </button>
         <button
+          onClick={() => navigate('/')}
+          className="mt-4 text-slate-400 text-body-md hover:underline"
+        >
+          Skip for now
+        </button>
+        <button
           onClick={() => navigate('/login')}
-          className="mt-4 text-info text-body-md hover:underline"
+          className="mt-2 text-info text-body-md hover:underline"
         >
           I already have an account
         </button>

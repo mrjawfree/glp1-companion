@@ -10,11 +10,11 @@ export default function InjectionDays() {
   return (
     <OnboardingShell
       step={2}
-      totalSteps={4}
+      totalSteps={7}
       onBack={() => navigate('/onboarding/medication')}
       onSkip={() => {
         update({ injectionDays: [] })
-        navigate('/onboarding/dose')
+        navigate('/onboarding/notifications')
       }}
     >
       <h1 className="text-display-lg text-slate-900 mb-2">When do you inject?</h1>
@@ -41,7 +41,7 @@ export default function InjectionDays() {
 
       <div className="mt-auto">
         <button
-          onClick={() => navigate('/onboarding/dose')}
+          onClick={() => navigate('/onboarding/notifications')}
           disabled={data.injectionDays.length === 0}
           className="w-full bg-slate-700 text-white py-4 rounded-md text-label uppercase tracking-wider disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-900 transition-colors"
         >

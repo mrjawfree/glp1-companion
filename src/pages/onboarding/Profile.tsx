@@ -73,7 +73,7 @@ export default function Profile() {
   }
 
   return (
-    <OnboardingShell step={4} totalSteps={4} onBack={() => navigate('/onboarding/weight-goal')}>
+    <OnboardingShell step={7} totalSteps={7} onBack={() => navigate('/onboarding/review')}>
       <h1 className="text-display-lg text-slate-900 mb-2">Create your account</h1>
       <p className="text-body-lg text-slate-500 mb-6">
         {user ? 'Ready to save your settings.' : 'Sign up to save your progress.'}

@@ -15,6 +15,7 @@ import DoseSetup from './pages/onboarding/DoseSetup'
 import WeightGoal from './pages/onboarding/WeightGoal'
 import Profile from './pages/onboarding/Profile'
 import NotificationPrimer from './pages/onboarding/NotificationPrimer'
+import ReviewConfirm from './pages/onboarding/ReviewConfirm'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { OnboardingProvider } from './hooks/useOnboarding'
 
@@ -54,11 +55,11 @@ export default function App() {
             <Route path="/onboarding" element={<OnboardingResume />} />
             <Route path="/onboarding/medication" element={<MedicationSelect />} />
             <Route path="/onboarding/injection-days" element={<InjectionDays />} />
-            <Route path="/onboarding/dose" element={<DoseSetup />} />
-            {/* Screens 5-7 (Weight Goal, Review, Success) — next heartbeat */}
-            <Route path="/onboarding/weight-goal" element={<WeightGoal />} />
-            <Route path="/onboarding/profile" element={<Profile />} />
             <Route path="/onboarding/notifications" element={<NotificationPrimer />} />
+            <Route path="/onboarding/dose" element={<DoseSetup />} />
+            <Route path="/onboarding/weight-goal" element={<WeightGoal />} />
+            <Route path="/onboarding/review" element={<ReviewConfirm />} />
+            <Route path="/onboarding/profile" element={<Profile />} />
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
               <Route index element={<Dashboard />} />

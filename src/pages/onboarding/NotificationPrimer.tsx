@@ -1,15 +1,22 @@
 import { useNavigate } from 'react-router-dom'
 import OnboardingShell from '../../components/OnboardingShell'
-import { useOnboarding } from '../../hooks/useOnboarding'
 
 export default function NotificationPrimer() {
   const navigate = useNavigate()
-  const { data } = useOnboarding()
-  const totalSteps = data.medication === 'other' ? 4 : 5
-  const step = totalSteps
+
+  const handleEnable = async () => {
+    if ('Notification' in window) {
+      await Notification.requestPermission()
+    }
+    navigate('/onboarding/dose')
+  }
 
   return (
-    <OnboardingShell step={step} totalSteps={totalSteps} onBack={() => navigate('/onboarding/profile')}>
+    <OnboardingShell
+      step={3}
+      totalSteps={7}
+      onBack={() => navigate('/onboarding/injection-days')}
+    >
       <div className="flex-1 flex flex-col items-center justify-center text-center">
         <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mb-6">
           <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
@@ -25,22 +32,13 @@ export default function NotificationPrimer() {
 
       <div className="mt-auto space-y-3">
         <button
-          onClick={() => {
-            if ('Notification' in window) {
-              Notification.requestPermission()
-            }
-            localStorage.removeItem('glp1_onboarding_route')
-            navigate('/')
-          }}
+          onClick={handleEnable}
           className="w-full bg-slate-700 text-white py-4 rounded-md text-label uppercase tracking-wider hover:bg-slate-900 transition-colors"
         >
           Enable notifications
         </button>
         <button
-          onClick={() => {
-            localStorage.removeItem('glp1_onboarding_route')
-            navigate('/')
-          }}
+          onClick={() => navigate('/onboarding/dose')}
           className="w-full text-center text-slate-400 text-body-md py-2"
         >
           Not now
