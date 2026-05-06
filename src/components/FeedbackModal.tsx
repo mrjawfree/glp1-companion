@@ -35,7 +35,7 @@ export default function FeedbackModal({ open, onClose }: FeedbackModalProps) {
   const sheetRef = useRef<HTMLDivElement>(null)
   const autoDismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const canSubmit = rating > 0 || likedMost.trim() || couldImprove.trim() || recommend !== null
+  const canSubmit = rating > 0
 
   const resetForm = useCallback(() => {
     setRating(0)
@@ -106,7 +106,7 @@ export default function FeedbackModal({ open, onClose }: FeedbackModalProps) {
 
     const { error: insertError } = await supabase.from('beta_feedback').insert({
       user_id: user?.id ?? null,
-      rating: rating || null,
+      rating,
       liked_most: likedMost.trim() || null,
       could_improve: couldImprove.trim() || null,
       would_recommend: recommend ?? 'maybe',
@@ -182,7 +182,8 @@ export default function FeedbackModal({ open, onClose }: FeedbackModalProps) {
               </h2>
 
               <div>
-                <div className="flex items-center justify-between px-2 py-3" role="radiogroup" aria-label="Overall rating, 1 to 5 stars">
+                <p className="text-label text-slate-500 uppercase tracking-wider mb-1">Rating <span className="text-amber-600">*</span></p>
+                <div className="flex items-center justify-between px-2 py-3" role="radiogroup" aria-label="Overall rating, 1 to 5 stars, required">
                   {[1, 2, 3, 4, 5].map(star => (
                     <button
                       key={star}
