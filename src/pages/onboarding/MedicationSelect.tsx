@@ -44,7 +44,7 @@ export default function MedicationSelect() {
   return (
     <OnboardingShell
       step={1}
-      totalSteps={4}
+      totalSteps={7}
       onBack={() => navigate('/onboarding')}
       onSkip={() => {
         update({ medication: null, medicationOther: null })

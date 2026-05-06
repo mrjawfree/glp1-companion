@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import OnboardingShell from '../../components/OnboardingShell'
 import NumericStepper from '../../components/NumericStepper'
 import SegmentedControl from '../../components/SegmentedControl'
-import { DoseUnit } from '../../types'
+import { DoseUnit, Medication } from '../../types'
 import { useOnboarding } from '../../hooks/useOnboarding'
 
 const DOSE_UNITS: { value: DoseUnit; label: string }[] = [
@@ -12,10 +12,28 @@ const DOSE_UNITS: { value: DoseUnit; label: string }[] = [
   { value: 'units', label: 'units' },
 ]
 
+const DEFAULT_STARTING_DOSES: Partial<Record<Medication, number>> = {
+  ozempic: 0.25,
+  wegovy: 0.25,
+  mounjaro: 2.5,
+  zepbound: 2.5,
+}
+
 export default function DoseSetup() {
   const navigate = useNavigate()
   const { data, update } = useOnboarding()
   const [error, setError] = useState('')
+  const [prefilled, setPrefilled] = useState(false)
+
+  useEffect(() => {
+    if (data.doseAmount === null && data.medication && !prefilled) {
+      const defaultDose = DEFAULT_STARTING_DOSES[data.medication]
+      if (defaultDose) {
+        update({ doseAmount: defaultDose, doseUnit: 'mg' })
+        setPrefilled(true)
+      }
+    }
+  }, [data.medication, data.doseAmount, prefilled, update])
 
   const handleContinue = () => {
     if (data.doseAmount !== null && (data.doseAmount < 0.25 || data.doseAmount > 20)) {
@@ -27,9 +45,9 @@ export default function DoseSetup() {
 
   return (
     <OnboardingShell
-      step={3}
-      totalSteps={4}
-      onBack={() => navigate('/onboarding/injection-days')}
+      step={4}
+      totalSteps={7}
+      onBack={() => navigate('/onboarding/notifications')}
       onSkip={() => {
         update({ doseAmount: null, doseUnit: 'mg' })
         navigate('/onboarding/weight-goal')

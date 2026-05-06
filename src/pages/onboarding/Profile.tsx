@@ -55,16 +55,25 @@ export default function Profile() {
       const { error: settingsError } = await supabase.from('user_settings').upsert({
         user_id: activeUser.id,
         medication_name: medicationName,
+        medication_other: data.medication === 'other' ? data.medicationOther : null,
+        injection_days: data.injectionDays,
         injection_day: data.injectionDays.length > 0
           ? ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][data.injectionDays[0]]
           : null,
+        dose_amount: data.doseAmount,
+        dose_unit: data.doseUnit,
         medication_dose: data.doseAmount?.toString(),
+        current_weight: data.currentWeight,
+        goal_weight: data.goalWeight,
+        weight_unit: data.weightUnit,
         goal_weight_lbs: data.weightUnit === 'lb' ? data.goalWeight : null,
+        onboarding_completed: true,
+        onboarding_completed_at: new Date().toISOString(),
       })
       if (settingsError) throw settingsError
 
       localStorage.removeItem('glp1_onboarding_route')
-      navigate('/onboarding/notifications')
+      navigate('/onboarding/success')
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to save profile')
     } finally {
@@ -73,7 +82,7 @@ export default function Profile() {
   }
 
   return (
-    <OnboardingShell step={4} totalSteps={4} onBack={() => navigate('/onboarding/weight-goal')}>
+    <OnboardingShell step={7} totalSteps={7} onBack={() => navigate('/onboarding/review')}>
       <h1 className="text-display-lg text-slate-900 mb-2">Create your account</h1>
       <p className="text-body-lg text-slate-500 mb-6">
         {user ? 'Ready to save your settings.' : 'Sign up to save your progress.'}

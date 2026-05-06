@@ -1,10 +1,19 @@
 import { useNavigate } from 'react-router-dom'
+import { useOnboarding } from '../../hooks/useOnboarding'
 
 export default function Welcome() {
   const navigate = useNavigate()
+  const { reset } = useOnboarding()
+
+  const handleSkip = () => {
+    reset()
+    localStorage.setItem('glp1_onboarding_skipped', 'true')
+    localStorage.removeItem('glp1_onboarding_route')
+    navigate('/login')
+  }
 
   return (
-    <div className="min-h-screen bg-warm-white flex flex-col">
+    <div className="min-h-screen bg-warm-white flex flex-col animate-fade-in">
       <div className="flex-1 flex flex-col items-center justify-center px-4 text-center">
         <div className="w-48 h-48 mb-8 rounded-full bg-gradient-to-br from-slate-200 via-slate-100 to-green-100 flex items-center justify-center">
           <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
@@ -26,8 +35,14 @@ export default function Welcome() {
           Get started
         </button>
         <button
+          onClick={handleSkip}
+          className="mt-4 text-slate-400 text-body-md hover:underline"
+        >
+          Skip for now
+        </button>
+        <button
           onClick={() => navigate('/login')}
-          className="mt-4 text-info text-body-md hover:underline"
+          className="mt-2 text-info text-body-md hover:underline"
         >
           I already have an account
         </button>
