@@ -1,5 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
+import InjectionDayBanner from './InjectionDayBanner'
 
 function TabIcon({ name, active }: { name: string; active: boolean }) {
   const color = active ? '#2C3E55' : '#8995A8'
@@ -30,6 +31,7 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-warm-white">
+      <InjectionDayBanner />
       <div className="max-w-lg mx-auto pb-20">
         <Outlet />
       </div>

@@ -1,13 +1,26 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../hooks/useAuth'
+import { usePushNotifications } from '../../hooks/usePushNotifications'
 import OnboardingShell from '../../components/OnboardingShell'
 
 export default function NotificationPrimer() {
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const { subscribe, supported, loading } = usePushNotifications(user?.id)
+  const [error, setError] = useState(false)
 
   const handleEnable = async () => {
-    if ('Notification' in window) {
-      await Notification.requestPermission()
+    if (!supported) {
+      if ('Notification' in window) {
+        await Notification.requestPermission()
+      }
+      navigate('/onboarding/first-action')
+      return
     }
+
+    const success = await subscribe()
+    if (!success) setError(true)
     navigate('/onboarding/first-action')
   }
 
@@ -29,14 +42,20 @@ export default function NotificationPrimer() {
         <p className="text-body-lg text-slate-500 mb-8 max-w-sm">
           We'll send a gentle nudge on injection days and when it's time to log meals. You can change this any time in Settings.
         </p>
+        {error && (
+          <p className="text-body-sm text-rose-500 mb-4">
+            Notifications were blocked. You can enable them later in Settings.
+          </p>
+        )}
       </div>
 
       <div className="mt-auto space-y-3">
         <button
           onClick={handleEnable}
-          className="w-full bg-slate-700 text-white py-4 rounded-md text-label uppercase tracking-wider hover:bg-slate-900 transition-colors"
+          disabled={loading}
+          className="w-full bg-slate-700 text-white py-4 rounded-md text-label uppercase tracking-wider hover:bg-slate-900 transition-colors disabled:opacity-40"
         >
-          Enable notifications
+          {loading ? 'Setting up...' : 'Enable notifications'}
         </button>
         <button
           onClick={() => navigate('/onboarding/first-action')}
