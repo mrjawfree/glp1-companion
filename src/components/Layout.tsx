@@ -88,13 +88,13 @@ export default function Layout() {
 
       <button
         onClick={() => setShowFeedback(true)}
-        aria-label="Send feedback"
-        className="fixed bottom-20 left-4 z-30 bg-green-600 text-white px-4 py-2 rounded-pill shadow-elevation-2 text-body-sm font-medium hover:bg-green-600/90 transition-colors flex items-center gap-2"
+        aria-label="Send beta feedback"
+        className="fixed bottom-20 right-4 z-40 h-14 w-14 rounded-full bg-white text-green-600 shadow-elevation-2 ring-1 ring-slate-200 transition-transform active:scale-95 focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2 flex items-center justify-center"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M21 15C21 15.53 20.79 16.04 20.41 16.41C20.04 16.79 19.53 17 19 17H7L3 21V5C3 4.47 3.21 3.96 3.59 3.59C3.96 3.21 4.47 3 5 3H19C19.53 3 20.04 3.21 20.41 3.59C20.79 3.96 21 4.47 21 5V15Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M12 8V12M12 12V16M8 12H12M12 12H16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
         </svg>
-        Feedback
       </button>
 
       <Suspense fallback={null}>
