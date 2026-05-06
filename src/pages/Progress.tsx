@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { ProgressSkeleton } from '../components/Skeleton'
+import ProgressShareCard from '../components/ProgressShareCard'
+import MilestoneCelebration, { checkMilestone } from '../components/MilestoneCelebration'
+import { useShareProgress } from '../hooks/useShareProgress'
 
 interface ProgressEntry {
   id: string
@@ -83,10 +86,28 @@ export default function Progress() {
   const [waistCm, setWaistCm] = useState('')
   const [energyLevel, setEnergyLevel] = useState(3)
   const [saving, setSaving] = useState(false)
+  const [showShareCard, setShowShareCard] = useState(false)
+  const [milestone, setMilestone] = useState<number | null>(null)
+  const [startWeight, setStartWeight] = useState<number | null>(null)
+  const [weeksOnMedication, setWeeksOnMedication] = useState(0)
+  const { share, status: shareStatus } = useShareProgress()
 
   useEffect(() => {
     if (user) loadEntries().finally(() => setLoading(false))
   }, [user])
+
+  useEffect(() => {
+    if (entries.length === 0) return
+    const oldest = entries[entries.length - 1]
+    const oldestWeight = weightUnit === 'lbs'
+      ? (oldest.weight_lbs ?? (oldest.weight_kg ? oldest.weight_kg * KG_TO_LBS : null))
+      : oldest.weight_kg
+    setStartWeight(oldestWeight ? parseFloat(oldestWeight.toFixed(1)) : null)
+
+    const startDate = new Date(oldest.recorded_at)
+    const weeks = Math.max(1, Math.round((Date.now() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000)))
+    setWeeksOnMedication(weeks)
+  }, [entries, weightUnit])
 
   async function loadEntries() {
     const { data } = await supabase
@@ -114,6 +135,16 @@ export default function Progress() {
       energy_level: energyLevel,
     })
     if (!error) {
+      if (startWeight && parsed && entries.length > 0) {
+        const prevWeight = getWeight(entries[0])
+        if (prevWeight !== null) {
+          const newWeight = weightUnit === 'lbs' ? parsed : parsed * KG_TO_LBS
+          const sw = weightUnit === 'lbs' ? startWeight : startWeight * KG_TO_LBS
+          const pw = weightUnit === 'lbs' ? prevWeight : prevWeight * KG_TO_LBS
+          const hit = checkMilestone(sw, pw, newWeight)
+          if (hit) setMilestone(hit)
+        }
+      }
       setShowForm(false)
       setWeightValue('')
       setWaistCm('')
@@ -149,10 +180,23 @@ export default function Progress() {
     <div className="px-4 pt-5">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-title-lg text-slate-900">Progress</h1>
-        <button onClick={() => setShowForm(!showForm)}
-          className="px-4 py-2 bg-slate-700 text-white text-label rounded-md hover:bg-slate-900 transition-colors">
-          {tab === 'weight' ? 'Log weight' : '+ Record'}
-        </button>
+        <div className="flex gap-2">
+          {entries.length > 0 && (
+            <button onClick={() => setShowShareCard(!showShareCard)}
+              className="px-3 py-2 border-2 border-slate-200 text-slate-700 text-label rounded-md hover:border-slate-400 transition-colors"
+              aria-label="Share progress">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                <polyline points="16 6 12 2 8 6" />
+                <line x1="12" y1="2" x2="12" y2="15" />
+              </svg>
+            </button>
+          )}
+          <button onClick={() => setShowForm(!showForm)}
+            className="px-4 py-2 bg-slate-700 text-white text-label rounded-md hover:bg-slate-900 transition-colors">
+            {tab === 'weight' ? 'Log weight' : '+ Record'}
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-1 bg-slate-100 rounded-md p-1 mb-5" role="tablist" aria-label="Progress categories">
@@ -307,6 +351,36 @@ export default function Progress() {
           </div>
         )}
       </div>
+
+      {showShareCard && (
+        <div className="mt-5">
+          <ProgressShareCard
+            startWeight={startWeight}
+            currentWeight={latestWeightVal}
+            unit={weightUnit}
+            weeksOnMedication={weeksOnMedication}
+            onShare={share}
+          />
+        </div>
+      )}
+
+      {milestone !== null && (
+        <MilestoneCelebration
+          milestone={milestone}
+          unit={weightUnit}
+          onDismiss={() => setMilestone(null)}
+          onShare={() => setShowShareCard(true)}
+        />
+      )}
+
+      {shareStatus !== 'idle' && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 px-5 py-3 rounded-md shadow-elevation-3 text-label text-white bg-slate-700">
+          {shareStatus === 'sharing' && 'Preparing image...'}
+          {shareStatus === 'copied' && 'Image copied to clipboard!'}
+          {shareStatus === 'shared' && 'Shared successfully!'}
+          {shareStatus === 'error' && 'Could not share. Try again.'}
+        </div>
+      )}
     </div>
   )
 }
