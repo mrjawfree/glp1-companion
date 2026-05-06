@@ -33,6 +33,9 @@ export default function Settings() {
   const [showNotifSettings, setShowNotifSettings] = useState(false)
   const [plan, setPlan] = useState<'monthly' | 'annual'>('annual')
   const [saving, setSaving] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const [medName, setMedName] = useState('')
   const [medDose, setMedDose] = useState('')
@@ -105,6 +108,39 @@ export default function Settings() {
   const handleSignOut = async () => {
     await signOut()
     navigate('/onboarding')
+  }
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true)
+    setDeleteError(null)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        setDeleteError('You must be signed in to delete your account.')
+        setDeleting(false)
+        return
+      }
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+      const res = await fetch(
+        `${supabaseUrl}/functions/v1/delete-user-account`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+      if (!res.ok) {
+        const body = await res.json().catch(() => null)
+        throw new Error(body?.error || 'Failed to delete account')
+      }
+      await supabase.auth.signOut()
+      navigate('/onboarding')
+    } catch (err: any) {
+      setDeleteError(err.message || 'Something went wrong. Please try again.')
+      setDeleting(false)
+    }
   }
 
   if (loading) return <SettingsSkeleton />
@@ -458,6 +494,44 @@ export default function Settings() {
         className="w-full py-4 bg-white border-2 border-slate-200 text-rose-500 rounded-md text-label font-medium hover:border-rose-500 transition-colors">
         Sign out
       </button>
+
+      <div className="mt-8 border-t border-slate-200 pt-6">
+        <p className="text-label text-slate-400 uppercase mb-3">Danger zone</p>
+        <button onClick={() => setShowDeleteConfirm(true)}
+          className="w-full py-4 bg-rose-50 border-2 border-rose-200 text-rose-600 rounded-md text-label font-medium hover:bg-rose-100 hover:border-rose-400 transition-colors">
+          Delete account
+        </button>
+      </div>
+
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4" role="dialog" aria-modal="true" aria-labelledby="delete-dialog-title">
+          <div className="bg-white rounded-lg shadow-elevation-3 p-6 max-w-sm w-full">
+            <h2 id="delete-dialog-title" className="text-title-md text-slate-900 mb-2">Delete your account?</h2>
+            <p className="text-body-md text-slate-500 mb-6">
+              This permanently deletes all your data and cannot be undone.
+            </p>
+            {deleteError && (
+              <div className="bg-rose-50 border border-rose-200 rounded-md p-3 mb-4">
+                <p className="text-body-sm text-rose-600">{deleteError}</p>
+              </div>
+            )}
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setShowDeleteConfirm(false); setDeleteError(null) }}
+                disabled={deleting}
+                className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-md text-label font-medium hover:bg-slate-200 transition-colors disabled:opacity-40">
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleting}
+                className="flex-1 py-3 bg-rose-600 text-white rounded-md text-label font-medium hover:bg-rose-700 transition-colors disabled:opacity-40">
+                {deleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <p className="text-body-sm text-slate-400 text-center mt-6">
         GLP-1 Companion v0.1 · Not medical advice
