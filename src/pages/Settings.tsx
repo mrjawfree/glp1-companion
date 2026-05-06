@@ -245,25 +245,42 @@ export default function Settings() {
         </div>
       </div>
 
-      <div className="bg-white rounded-md shadow-elevation-1 p-5 mb-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-body-md font-semibold text-slate-900">Medication & Goals</p>
-            <p className="text-body-sm text-slate-400">
-              {settings?.medication_name
-                ? `${settings.medication_name}${settings.medication_dose ? ` · ${settings.medication_dose}` : ''}`
-                : 'Not configured'}
-            </p>
-            {settings?.goal_weight_lbs && (
-              <p className="text-body-sm text-green-600 mt-1">Goal: {settings.goal_weight_lbs} lbs</p>
-            )}
+      {!settings?.medication_name && !settings?.goal_weight_lbs ? (
+        <div className="bg-white rounded-md shadow-elevation-1 p-6 mb-4 text-center">
+          <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M19 3H5C3.89 3 3 3.89 3 5V19C3 20.1 3.89 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.89 20.1 3 19 3Z" stroke="#4A7C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M12 8V16M8 12H16" stroke="#4A7C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </div>
+          <p className="text-body-lg font-semibold text-slate-900 mb-1">Set up your medication & goals</p>
+          <p className="text-body-sm text-slate-400 mb-4">Add your GLP-1 medication details and weight goal to get personalized tracking and reminders.</p>
           <button onClick={() => setShowSettings(true)}
-            className="px-4 py-2 bg-slate-100 text-slate-700 text-label rounded-md hover:bg-slate-200 transition-colors">
-            Edit
+            className="px-5 py-3 bg-slate-700 text-white text-label rounded-md hover:bg-slate-900 transition-colors">
+            Configure now
           </button>
         </div>
-      </div>
+      ) : (
+        <div className="bg-white rounded-md shadow-elevation-1 p-5 mb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-body-md font-semibold text-slate-900">Medication & Goals</p>
+              <p className="text-body-sm text-slate-400">
+                {settings?.medication_name
+                  ? `${settings.medication_name}${settings.medication_dose ? ` · ${settings.medication_dose}` : ''}`
+                  : 'Not configured'}
+              </p>
+              {settings?.goal_weight_lbs && (
+                <p className="text-body-sm text-green-600 mt-1">Goal: {settings.goal_weight_lbs} lbs</p>
+              )}
+            </div>
+            <button onClick={() => setShowSettings(true)}
+              className="px-4 py-2 bg-slate-100 text-slate-700 text-label rounded-md hover:bg-slate-200 transition-colors">
+              Edit
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="bg-white rounded-md shadow-elevation-1 p-5 mb-4">
         <div className="flex items-center justify-between">

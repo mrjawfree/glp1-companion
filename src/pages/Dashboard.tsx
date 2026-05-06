@@ -102,6 +102,7 @@ export default function Dashboard() {
   const [todayProtein, setTodayProtein] = useState(0)
   const [todayFiber, setTodayFiber] = useState(0)
   const [hydration, setHydration] = useState(0)
+  const [hasMealsToday, setHasMealsToday] = useState(false)
   const [streak, setStreak] = useState(0)
   const [streakDays, setStreakDays] = useState<('logged' | 'partial' | 'missed' | 'today' | 'future')[]>([])
 
@@ -116,6 +117,7 @@ export default function Dashboard() {
     const today = new Date().toISOString().split('T')[0]
     const mealsP = supabase.from('meals').select('protein_g, fiber_g').eq('user_id', user.id).gte('logged_at', today).then(({ data }) => {
       if (data) {
+        setHasMealsToday(data.length > 0)
         setTodayProtein(data.reduce((s, e) => s + (e.protein_g || 0), 0))
         setTodayFiber(data.reduce((s, e) => s + (e.fiber_g || 0), 0))
       }
@@ -231,27 +233,36 @@ export default function Dashboard() {
 
       <div className="mb-5">
         <h2 className="text-title-md text-slate-900 mb-3">Gentle picks for today</h2>
-        <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4">
-          {[
-            { name: 'Greek Yogurt Bowl', protein: '24g', time: '5 min', tag: 'Settles well' },
-            { name: 'Bone Broth & Toast', protein: '18g', time: '10 min', tag: 'Sip-friendly' },
-            { name: 'Cottage Cheese Plate', protein: '28g', time: '5 min', tag: 'Easy on stomach' },
-          ].map((meal) => (
-            <button
-              key={meal.name}
-              onClick={() => navigate('/meals')}
-              className="min-w-[200px] bg-white rounded-md shadow-elevation-1 p-4 text-left flex-shrink-0"
-            >
-              <div className="w-full h-24 bg-warm-white-2 rounded-sm mb-3" />
-              <p className="text-body-md font-semibold text-slate-900 mb-1">{meal.name}</p>
-              <div className="flex gap-2">
-                <span className="text-body-sm text-green-600 font-medium">{meal.protein} protein</span>
-                <span className="text-body-sm text-slate-400">{meal.time}</span>
-              </div>
-              <span className="inline-block mt-2 text-body-sm bg-green-100 text-green-600 px-2 py-0.5 rounded-pill">{meal.tag}</span>
+        {!hasMealsToday ? (
+          <div className="text-center py-12">
+            <p className="text-body-lg text-slate-400 mb-3">No meals logged today yet.</p>
+            <button onClick={() => navigate('/meals')} className="text-body-md text-info font-medium">
+              Log your first meal
             </button>
-          ))}
-        </div>
+          </div>
+        ) : (
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4">
+            {[
+              { name: 'Greek Yogurt Bowl', protein: '24g', time: '5 min', tag: 'Settles well' },
+              { name: 'Bone Broth & Toast', protein: '18g', time: '10 min', tag: 'Sip-friendly' },
+              { name: 'Cottage Cheese Plate', protein: '28g', time: '5 min', tag: 'Easy on stomach' },
+            ].map((meal) => (
+              <button
+                key={meal.name}
+                onClick={() => navigate('/meals')}
+                className="min-w-[200px] bg-white rounded-md shadow-elevation-1 p-4 text-left flex-shrink-0"
+              >
+                <div className="w-full h-24 bg-warm-white-2 rounded-sm mb-3" />
+                <p className="text-body-md font-semibold text-slate-900 mb-1">{meal.name}</p>
+                <div className="flex gap-2">
+                  <span className="text-body-sm text-green-600 font-medium">{meal.protein} protein</span>
+                  <span className="text-body-sm text-slate-400">{meal.time}</span>
+                </div>
+                <span className="inline-block mt-2 text-body-sm bg-green-100 text-green-600 px-2 py-0.5 rounded-pill">{meal.tag}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <p className="text-body-sm text-slate-400 text-center pb-6">
