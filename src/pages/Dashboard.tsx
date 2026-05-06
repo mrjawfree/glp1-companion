@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
+import { DashboardSkeleton } from '../components/Skeleton'
 
 interface DoseEntry {
   id: string
@@ -95,6 +96,7 @@ function StreakRow({ streak, days }: { streak: number; days: ('logged' | 'partia
 export default function Dashboard() {
   const { user } = useAuth()
   const navigate = useNavigate()
+  const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [lastDose, setLastDose] = useState<DoseEntry | null>(null)
   const [todayProtein, setTodayProtein] = useState(0)
@@ -105,14 +107,14 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!user) return
-    supabase.from('users').select('display_name, medication, current_dose').eq('id', user.id).single().then(({ data }) => {
+    const profileP = supabase.from('users').select('display_name, medication, current_dose').eq('id', user.id).single().then(({ data }) => {
       if (data) setProfile(data)
     })
-    supabase.from('doses').select('*').eq('user_id', user.id).order('logged_at', { ascending: false }).limit(1).then(({ data }) => {
+    const doseP = supabase.from('doses').select('*').eq('user_id', user.id).order('logged_at', { ascending: false }).limit(1).then(({ data }) => {
       if (data?.[0]) setLastDose(data[0])
     })
     const today = new Date().toISOString().split('T')[0]
-    supabase.from('meals').select('protein_g, fiber_g').eq('user_id', user.id).gte('logged_at', today).then(({ data }) => {
+    const mealsP = supabase.from('meals').select('protein_g, fiber_g').eq('user_id', user.id).gte('logged_at', today).then(({ data }) => {
       if (data) {
         setTodayProtein(data.reduce((s, e) => s + (e.protein_g || 0), 0))
         setTodayFiber(data.reduce((s, e) => s + (e.fiber_g || 0), 0))
@@ -122,7 +124,8 @@ export default function Dashboard() {
     const savedHydration = localStorage.getItem(`glp1_hydration_${today}`)
     if (savedHydration) setHydration(parseInt(savedHydration))
 
-    computeStreak()
+    const streakP = computeStreak()
+    Promise.all([profileP, doseP, mealsP, streakP]).finally(() => setLoading(false))
   }, [user])
 
   async function computeStreak() {
@@ -159,6 +162,8 @@ export default function Dashboard() {
     setStreak(count)
     setStreakDays(days)
   }
+
+  if (loading) return <DashboardSkeleton />
 
   const displayName = profile?.display_name || user?.email?.split('@')[0] || 'there'
 

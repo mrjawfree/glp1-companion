@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { MealPlansSkeleton } from '../components/Skeleton'
 
 interface MealPlan {
   id: string
@@ -48,6 +49,7 @@ function getWeekStart(): string {
 
 export default function MealPlans() {
   const { user } = useAuth()
+  const [loading, setLoading] = useState(true)
   const [plans, setPlans] = useState<MealPlan[]>([])
   const [myPlans, setMyPlans] = useState<MealPlan[]>([])
   const [savedPlanIds, setSavedPlanIds] = useState<Set<string>>(new Set())
@@ -65,8 +67,9 @@ export default function MealPlans() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    loadTemplates()
-    if (user) loadMyPlans()
+    const templatesP = loadTemplates()
+    const plansP = user ? loadMyPlans() : Promise.resolve()
+    Promise.all([templatesP, plansP]).finally(() => setLoading(false))
   }, [user])
 
   async function loadTemplates() {
@@ -168,6 +171,8 @@ export default function MealPlans() {
   const savedPlans = plans.filter(p => savedPlanIds.has(p.id))
 
   const dayEntries = entries.filter(e => e.day_of_week === selectedDay)
+
+  if (loading) return <MealPlansSkeleton />
 
   if (activePlan) {
     return (

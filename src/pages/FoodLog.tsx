@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { FoodLogSkeleton } from '../components/Skeleton'
 
 interface FoodEntry {
   id: string
@@ -47,6 +48,7 @@ function MacroBar({ protein, fat, carbs }: { protein: number; fat: number; carbs
 
 export default function FoodLog() {
   const { user } = useAuth()
+  const [loading, setLoading] = useState(true)
   const [entries, setEntries] = useState<FoodEntry[]>([])
   const [view, setView] = useState<'daily' | 'add' | 'log'>('daily')
   const [searchQuery, setSearchQuery] = useState('')
@@ -62,7 +64,7 @@ export default function FoodLog() {
   const [hydration, setHydration] = useState(0)
 
   useEffect(() => {
-    if (user) loadEntries()
+    if (user) loadEntries().finally(() => setLoading(false))
   }, [user, selectedDate])
 
   async function loadEntries() {
@@ -125,6 +127,8 @@ export default function FoodLog() {
     acc[entry.meal_type].push(entry)
     return acc
   }, {})
+
+  if (loading && view === 'daily') return <FoodLogSkeleton />
 
   if (view === 'add') {
     const filtered = STARTER_FOODS.filter(f =>

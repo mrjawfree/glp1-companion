@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { ProgressSkeleton } from '../components/Skeleton'
 
 interface ProgressEntry {
   id: string
@@ -72,6 +73,7 @@ const KG_TO_LBS = 2.20462
 
 export default function Progress() {
   const { user } = useAuth()
+  const [loading, setLoading] = useState(true)
   const [entries, setEntries] = useState<ProgressEntry[]>([])
   const [tab, setTab] = useState<Tab>('weight')
   const [range, setRange] = useState<Range>('30')
@@ -83,7 +85,7 @@ export default function Progress() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    if (user) loadEntries()
+    if (user) loadEntries().finally(() => setLoading(false))
   }, [user])
 
   async function loadEntries() {
@@ -140,6 +142,8 @@ export default function Progress() {
   const weekAvg = weekWeights.length > 0
     ? weekWeights.reduce((s, e) => s + getWeight(e)!, 0) / weekWeights.length
     : null
+
+  if (loading) return <ProgressSkeleton />
 
   return (
     <div className="px-4 pt-5">

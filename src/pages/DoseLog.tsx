@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { Medication, MEDICATION_INFO } from '../types'
+import { DoseLogSkeleton } from '../components/Skeleton'
 
 interface DoseEntry {
   id: string
@@ -46,6 +47,7 @@ function getSuggestedSite(lastSite: string | null): InjectionSite {
 export default function DoseLog() {
   const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
+  const [loading, setLoading] = useState(true)
   const [doses, setDoses] = useState<DoseEntry[]>([])
   const [view, setView] = useState<'history' | 'log' | 'checkin'>(() =>
     searchParams.get('checkin') === 'true' ? 'checkin' : searchParams.get('log') === 'true' ? 'log' : 'history'
@@ -86,7 +88,7 @@ export default function DoseLog() {
   }, [user, filter])
 
   useEffect(() => {
-    if (user) loadDoses()
+    if (user) loadDoses().finally(() => setLoading(false))
   }, [user, loadDoses])
 
   useEffect(() => {
@@ -169,6 +171,8 @@ export default function DoseLog() {
     acc[month].push(dose)
     return acc
   }, {})
+
+  if (loading && view === 'history') return <DoseLogSkeleton />
 
   if (view === 'log') {
     return (

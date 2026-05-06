@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
+import { SettingsSkeleton } from '../components/Skeleton'
 
 interface UserProfile {
   display_name: string
@@ -22,6 +23,7 @@ const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'
 export default function Settings() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
+  const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [settings, setSettings] = useState<UserSettings | null>(null)
   const [showUpgrade, setShowUpgrade] = useState(false)
@@ -37,10 +39,11 @@ export default function Settings() {
 
   useEffect(() => {
     if (user) {
-      supabase.from('users').select('display_name, medication, subscription_tier').eq('id', user.id).single().then(({ data }) => {
+      const profileP = supabase.from('users').select('display_name, medication, subscription_tier').eq('id', user.id).single().then(({ data }) => {
         if (data) setProfile(data)
       })
-      loadSettings()
+      const settingsP = loadSettings()
+      Promise.all([profileP, settingsP]).finally(() => setLoading(false))
     }
   }, [user])
 
@@ -86,6 +89,8 @@ export default function Settings() {
     await signOut()
     navigate('/onboarding')
   }
+
+  if (loading) return <SettingsSkeleton />
 
   if (showUpgrade) {
     return (
