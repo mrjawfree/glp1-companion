@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { usePushNotifications } from '../hooks/usePushNotifications'
 import { supabase } from '../lib/supabase'
 import { SettingsSkeleton } from '../components/Skeleton'
+import FeedbackModal from '../components/FeedbackModal'
 
 interface UserProfile {
   display_name: string
@@ -36,6 +37,7 @@ export default function Settings() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [showFeedback, setShowFeedback] = useState(false)
 
   const [medName, setMedName] = useState('')
   const [medDose, setMedDose] = useState('')
@@ -490,6 +492,19 @@ export default function Settings() {
         </div>
       </div>
 
+      <div className="bg-white rounded-md shadow-elevation-1 p-5 mb-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-body-md font-semibold text-slate-900">Beta Feedback</p>
+            <p className="text-body-sm text-slate-400">Help us improve your experience</p>
+          </div>
+          <button onClick={() => setShowFeedback(true)}
+            className="px-4 py-2 bg-green-600 text-white text-label rounded-md hover:bg-green-600/90 transition-colors">
+            Send
+          </button>
+        </div>
+      </div>
+
       <button onClick={handleSignOut}
         className="w-full py-4 bg-white border-2 border-slate-200 text-rose-500 rounded-md text-label font-medium hover:border-rose-500 transition-colors">
         Sign out
@@ -536,6 +551,8 @@ export default function Settings() {
       <p className="text-body-sm text-slate-400 text-center mt-6">
         GLP-1 Companion v0.1 · Not medical advice
       </p>
+
+      <FeedbackModal open={showFeedback} onClose={() => setShowFeedback(false)} />
     </div>
   )
 }

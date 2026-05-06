@@ -1,6 +1,8 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, lazy, Suspense } from 'react'
 import InjectionDayBanner from './InjectionDayBanner'
+
+const FeedbackModal = lazy(() => import('./FeedbackModal'))
 
 function TabIcon({ name, active }: { name: string; active: boolean }) {
   const color = active ? '#2C3E55' : '#8995A8'
@@ -20,6 +22,7 @@ function TabIcon({ name, active }: { name: string; active: boolean }) {
 
 export default function Layout() {
   const [fabOpen, setFabOpen] = useState(false)
+  const [showFeedback, setShowFeedback] = useState(false)
   const navigate = useNavigate()
 
   const fabActions = [
@@ -82,6 +85,21 @@ export default function Layout() {
           </NavLink>
         </div>
       </nav>
+
+      <button
+        onClick={() => setShowFeedback(true)}
+        aria-label="Send feedback"
+        className="fixed bottom-20 left-4 z-30 bg-green-600 text-white px-4 py-2 rounded-pill shadow-elevation-2 text-body-sm font-medium hover:bg-green-600/90 transition-colors flex items-center gap-2"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M21 15C21 15.53 20.79 16.04 20.41 16.41C20.04 16.79 19.53 17 19 17H7L3 21V5C3 4.47 3.21 3.96 3.59 3.59C3.96 3.21 4.47 3 5 3H19C19.53 3 20.04 3.21 20.41 3.59C20.79 3.96 21 4.47 21 5V15Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+        Feedback
+      </button>
+
+      <Suspense fallback={null}>
+        <FeedbackModal open={showFeedback} onClose={() => setShowFeedback(false)} />
+      </Suspense>
     </div>
   )
 }
