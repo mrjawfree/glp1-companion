@@ -54,7 +54,7 @@ export default function DoseSetup() {
           suffix={data.doseUnit}
         />
         {error && (
-          <p className="text-body-sm text-rose-500 mt-1.5">{error}</p>
+          <p className="text-body-sm text-rose-500 mt-1.5" role="alert" aria-live="polite">{error}</p>
         )}
       </div>
 

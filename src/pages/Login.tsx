@@ -35,23 +35,31 @@ export default function Login() {
         <h1 className="text-display-lg text-center text-slate-900 mb-2">GLP-1 Companion</h1>
         <p className="text-center text-slate-500 text-body-lg mb-8">Track your journey, optimize your nutrition</p>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            className="w-full px-4 py-3 border-2 border-slate-200 rounded-md bg-white text-body-lg focus:border-slate-700 focus:outline-none"
-            required
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            className="w-full px-4 py-3 border-2 border-slate-200 rounded-md bg-white text-body-lg focus:border-slate-700 focus:outline-none"
-            required
-          />
-          {error && <p className="text-rose-500 text-body-sm">{error}</p>}
+          <div>
+            <label htmlFor="login-email" className="sr-only">Email</label>
+            <input
+              id="login-email"
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              className="w-full px-4 py-3 border-2 border-slate-200 rounded-md bg-white text-body-lg focus:border-slate-700 focus:outline-none"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="login-password" className="sr-only">Password</label>
+            <input
+              id="login-password"
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="w-full px-4 py-3 border-2 border-slate-200 rounded-md bg-white text-body-lg focus:border-slate-700 focus:outline-none"
+              required
+            />
+          </div>
+          {error && <p className="text-rose-500 text-body-sm" role="alert" aria-live="polite">{error}</p>}
           <button
             type="submit"
             disabled={loading}

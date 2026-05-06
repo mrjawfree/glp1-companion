@@ -5,13 +5,13 @@ function TabIcon({ name, active }: { name: string; active: boolean }) {
   const color = active ? '#2C3E55' : '#8995A8'
   switch (name) {
     case 'home':
-      return <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 12L12 3L21 12V21H15V15H9V21H3V12Z" stroke={color} strokeWidth="1.5" fill={active ? color : 'none'} strokeLinejoin="round"/></svg>
+      return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12L12 3L21 12V21H15V15H9V21H3V12Z" stroke={color} strokeWidth="1.5" fill={active ? color : 'none'} strokeLinejoin="round"/></svg>
     case 'meals':
-      return <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke={color} strokeWidth="1.5"/><path d="M8 9C8 9 10 13 12 13C14 13 16 9 16 9" stroke={color} strokeWidth="1.5" strokeLinecap="round"/></svg>
+      return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke={color} strokeWidth="1.5"/><path d="M8 9C8 9 10 13 12 13C14 13 16 9 16 9" stroke={color} strokeWidth="1.5" strokeLinecap="round"/></svg>
     case 'progress':
-      return <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><polyline points="4,18 8,12 12,14 16,8 20,10" stroke={color} strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
+      return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><polyline points="4,18 8,12 12,14 16,8 20,10" stroke={color} strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
     case 'profile':
-      return <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke={color} strokeWidth="1.5"/><path d="M4 20C4 16.6863 7.58172 14 12 14C16.4183 14 20 16.6863 20 20" stroke={color} strokeWidth="1.5" strokeLinecap="round"/></svg>
+      return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="4" stroke={color} strokeWidth="1.5"/><path d="M4 20C4 16.6863 7.58172 14 12 14C16.4183 14 20 16.6863 20 20" stroke={color} strokeWidth="1.5" strokeLinecap="round"/></svg>
     default:
       return null
   }
@@ -35,7 +35,7 @@ export default function Layout() {
       </div>
 
       {fabOpen && (
-        <div className="fixed inset-0 bg-slate-900/20 z-40" onClick={() => setFabOpen(false)} />
+        <div className="fixed inset-0 bg-slate-900/20 z-40" onClick={() => setFabOpen(false)} aria-hidden="true" />
       )}
 
       {fabOpen && (
@@ -52,7 +52,7 @@ export default function Layout() {
         </div>
       )}
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-30">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-30" aria-label="Main navigation">
         <div className="max-w-lg mx-auto flex items-center justify-around h-16 relative">
           <NavLink to="/" end className={({ isActive }) => `flex flex-col items-center gap-1 ${isActive ? 'text-slate-700' : 'text-slate-400'}`}>
             {({ isActive }) => <><TabIcon name="home" active={isActive} /><span className="text-[11px] font-medium">Home</span></>}
@@ -63,9 +63,11 @@ export default function Layout() {
 
           <button
             onClick={() => setFabOpen(!fabOpen)}
+            aria-label={fabOpen ? 'Close quick actions menu' : 'Open quick actions menu'}
+            aria-expanded={fabOpen}
             className="w-14 h-14 bg-slate-700 rounded-full flex items-center justify-center -mt-6 shadow-elevation-2 hover:bg-slate-900 transition-colors"
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M12 5V19M5 12H19" stroke="white" strokeWidth="2" strokeLinecap="round"/>
             </svg>
           </button>

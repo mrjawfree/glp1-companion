@@ -56,7 +56,7 @@ function TrendChart({ entries, accessor, range }: {
 
   return (
     <div>
-      <svg viewBox={`-10 -10 ${w + 20} ${h + 20}`} className="w-full h-32">
+      <svg viewBox={`-10 -10 ${w + 20} ${h + 20}`} className="w-full h-32" role="img" aria-label={`Trend chart: ${trend}. Latest value: ${latest}`}>
         <polyline points={points} fill="none" stroke="#4A7C5C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         {values.map((v, i) => {
           const x = (i / (values.length - 1)) * w
@@ -155,9 +155,10 @@ export default function Progress() {
         </button>
       </div>
 
-      <div className="flex gap-1 bg-slate-100 rounded-md p-1 mb-5">
+      <div className="flex gap-1 bg-slate-100 rounded-md p-1 mb-5" role="tablist" aria-label="Progress categories">
         {(['weight', 'body', 'energy', 'doses'] as Tab[]).map(t => (
           <button key={t} onClick={() => setTab(t)}
+            role="tab" aria-selected={tab === t}
             className={`flex-1 py-2 rounded-md text-label transition-colors capitalize ${
               tab === t ? 'bg-white text-slate-700 shadow-elevation-1' : 'text-slate-400'
             }`}>
@@ -170,10 +171,11 @@ export default function Progress() {
         <form onSubmit={handleSubmit} className="bg-white rounded-md shadow-elevation-1 p-5 mb-5 space-y-4">
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-label text-slate-500 uppercase">Weight</label>
-              <div className="flex gap-1 bg-slate-100 rounded-md p-0.5">
+              <label htmlFor="progress-weight" className="text-label text-slate-500 uppercase">Weight</label>
+              <div className="flex gap-1 bg-slate-100 rounded-md p-0.5" role="radiogroup" aria-label="Weight unit">
                 {(['lbs', 'kg'] as WeightUnit[]).map(u => (
                   <button key={u} type="button" onClick={() => setWeightUnit(u)}
+                    role="radio" aria-checked={weightUnit === u}
                     className={`px-2.5 py-1 rounded text-body-sm transition-colors ${
                       weightUnit === u ? 'bg-white text-slate-700 shadow-sm' : 'text-slate-400'
                     }`}>
@@ -182,23 +184,24 @@ export default function Progress() {
                 ))}
               </div>
             </div>
-            <input type="number" step="0.1" value={weightValue} onChange={e => setWeightValue(e.target.value)}
+            <input id="progress-weight" type="number" step="0.1" value={weightValue} onChange={e => setWeightValue(e.target.value)}
               placeholder={latestWeightVal ? String(latestWeightVal) : weightUnit === 'lbs' ? '165.0' : '75.0'}
               className="w-full border-2 border-slate-200 rounded-md px-4 py-3 text-body-lg bg-white focus:border-slate-700 focus:outline-none" />
           </div>
           <div>
-            <label className="text-label text-slate-500 uppercase mb-2 block">Waist (cm)</label>
-            <input type="number" step="0.1" value={waistCm} onChange={e => setWaistCm(e.target.value)}
+            <label htmlFor="progress-waist" className="text-label text-slate-500 uppercase mb-2 block">Waist (cm)</label>
+            <input id="progress-waist" type="number" step="0.1" value={waistCm} onChange={e => setWaistCm(e.target.value)}
               placeholder="90.0"
               className="w-full border-2 border-slate-200 rounded-md px-4 py-3 text-body-lg bg-white focus:border-slate-700 focus:outline-none" />
           </div>
           <div>
-            <label className="text-label text-slate-500 uppercase mb-2 block">Energy level</label>
+            <label id="progress-energy-label" className="text-label text-slate-500 uppercase mb-2 block">Energy level</label>
             <div className="flex items-center gap-4">
               <span className="text-body-sm text-slate-400">Drained</span>
-              <div className="flex gap-2 flex-1 justify-center">
+              <div className="flex gap-2 flex-1 justify-center" role="radiogroup" aria-labelledby="progress-energy-label">
                 {[1, 2, 3, 4, 5].map(level => (
                   <button key={level} type="button" onClick={() => setEnergyLevel(level)}
+                    role="radio" aria-checked={energyLevel === level} aria-label={`Energy level ${level} of 5`}
                     className={`w-11 h-11 rounded-full text-label transition-colors ${
                       energyLevel === level
                         ? 'bg-slate-700 text-white'
@@ -219,9 +222,10 @@ export default function Progress() {
       )}
 
       <div className="flex items-center justify-between mb-5">
-        <div className="flex gap-2">
+        <div className="flex gap-2" role="tablist" aria-label="Time range">
           {(['30', '90', '365'] as Range[]).map(r => (
             <button key={r} onClick={() => setRange(r)}
+              role="tab" aria-selected={range === r}
               className={`px-3 py-1.5 rounded-pill text-body-sm transition-colors ${
                 range === r ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-500'
               }`}>
@@ -230,9 +234,10 @@ export default function Progress() {
           ))}
         </div>
         {tab === 'weight' && (
-          <div className="flex gap-1 bg-slate-100 rounded-md p-0.5">
+          <div className="flex gap-1 bg-slate-100 rounded-md p-0.5" role="radiogroup" aria-label="Weight unit">
             {(['lbs', 'kg'] as WeightUnit[]).map(u => (
               <button key={u} onClick={() => setWeightUnit(u)}
+                role="radio" aria-checked={weightUnit === u}
                 className={`px-2 py-1 rounded text-body-sm transition-colors ${
                   weightUnit === u ? 'bg-white text-slate-700 shadow-sm' : 'text-slate-400'
                 }`}>

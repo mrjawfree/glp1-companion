@@ -178,8 +178,8 @@ export default function DoseLog() {
     return (
       <div className="px-4 pt-5">
         <div className="flex items-center gap-3 mb-6">
-          <button onClick={() => { setView('history'); setShowDoubleLogConfirm(false) }} className="text-slate-500">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M15 19L8 12L15 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <button onClick={() => { setView('history'); setShowDoubleLogConfirm(false) }} className="text-slate-500" aria-label="Back to dose history">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 19L8 12L15 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </button>
           <h1 className="text-display-lg text-slate-900">Log your dose</h1>
         </div>
@@ -200,10 +200,11 @@ export default function DoseLog() {
 
         <form onSubmit={handleLogDose} className="space-y-5">
           <div>
-            <label className="text-label text-slate-500 uppercase mb-2 block">Medication</label>
-            <div className="flex gap-2 flex-wrap">
+            <label id="medication-label" className="text-label text-slate-500 uppercase mb-2 block">Medication</label>
+            <div className="flex gap-2 flex-wrap" role="radiogroup" aria-labelledby="medication-label">
               {medications.map(med => (
                 <button key={med} type="button" onClick={() => setMedication(med)}
+                  role="radio" aria-checked={medication === med}
                   className={`px-4 py-2 rounded-pill text-body-md transition-colors ${
                     medication === med ? 'bg-slate-700 text-white' : 'bg-white border border-slate-200 text-slate-700'
                   }`}>
@@ -214,24 +215,26 @@ export default function DoseLog() {
           </div>
 
           <div>
-            <label className="text-label text-slate-500 uppercase mb-2 block">Dose (mg)</label>
+            <label htmlFor="dose-amount" className="text-label text-slate-500 uppercase mb-2 block">Dose (mg)</label>
             <div className="flex items-center gap-3">
               <button type="button" onClick={() => setDoseAmount(String(Math.max(0, parseFloat(doseAmount || '0') - 0.25)))}
+                aria-label="Decrease dose"
                 className="w-11 h-11 rounded-md bg-slate-100 text-slate-700 flex items-center justify-center text-title-lg">−</button>
-              <input type="number" step="0.25" value={doseAmount} onChange={e => setDoseAmount(e.target.value)}
+              <input id="dose-amount" type="number" step="0.25" value={doseAmount} onChange={e => setDoseAmount(e.target.value)}
                 placeholder="0.00" className="flex-1 border-2 border-slate-200 rounded-md px-4 py-3 text-body-lg text-center bg-white focus:border-slate-700 focus:outline-none" required />
               <button type="button" onClick={() => setDoseAmount(String(parseFloat(doseAmount || '0') + 0.25))}
+                aria-label="Increase dose"
                 className="w-11 h-11 rounded-md bg-slate-100 text-slate-700 flex items-center justify-center text-title-lg">+</button>
             </div>
           </div>
 
           <div>
-            <label className="text-label text-slate-500 uppercase mb-2 block">Injection site</label>
-            <div className="bg-white rounded-md border-2 border-slate-200 p-4">
+            <label id="injection-site-label" className="text-label text-slate-500 uppercase mb-2 block">Injection site</label>
+            <div className="bg-white rounded-md border-2 border-slate-200 p-4" role="radiogroup" aria-labelledby="injection-site-label">
               {injectionSite === suggestedSite && (
                 <p className="text-body-sm text-green-600 mb-3">Suggested: rotate to {INJECTION_SITES.find(s => s.value === suggestedSite)?.label}</p>
               )}
-              <svg viewBox="0 0 200 300" className="w-40 mx-auto mb-3" fill="none">
+              <svg viewBox="0 0 200 300" className="w-40 mx-auto mb-3" role="img" aria-label={`Body diagram showing injection sites. Selected: ${INJECTION_SITES.find(s => s.value === injectionSite)?.label}`} fill="none">
                 <ellipse cx="100" cy="40" rx="20" ry="25" stroke="#C2CCD9" strokeWidth="1.5" />
                 <line x1="100" y1="65" x2="100" y2="170" stroke="#C2CCD9" strokeWidth="1.5" />
                 <line x1="100" y1="90" x2="60" y2="140" stroke="#C2CCD9" strokeWidth="1.5" />
@@ -240,16 +243,20 @@ export default function DoseLog() {
                 <line x1="100" y1="170" x2="125" y2="270" stroke="#C2CCD9" strokeWidth="1.5" />
                 <circle cx="80" cy="140" r="14" fill={injectionSite === 'left_abdomen' ? '#4A7C5C' : '#EDF1F6'}
                   stroke={injectionSite === 'left_abdomen' ? '#4A7C5C' : '#C2CCD9'} strokeWidth="1.5" className="cursor-pointer"
-                  onClick={() => setInjectionSite('left_abdomen')} />
+                  role="radio" aria-checked={injectionSite === 'left_abdomen'} aria-label="Left abdomen" tabIndex={0}
+                  onClick={() => setInjectionSite('left_abdomen')} onKeyDown={e => e.key === 'Enter' && setInjectionSite('left_abdomen')} />
                 <circle cx="120" cy="140" r="14" fill={injectionSite === 'right_abdomen' ? '#4A7C5C' : '#EDF1F6'}
                   stroke={injectionSite === 'right_abdomen' ? '#4A7C5C' : '#C2CCD9'} strokeWidth="1.5" className="cursor-pointer"
-                  onClick={() => setInjectionSite('right_abdomen')} />
+                  role="radio" aria-checked={injectionSite === 'right_abdomen'} aria-label="Right abdomen" tabIndex={0}
+                  onClick={() => setInjectionSite('right_abdomen')} onKeyDown={e => e.key === 'Enter' && setInjectionSite('right_abdomen')} />
                 <circle cx="80" cy="220" r="12" fill={injectionSite === 'left_thigh' ? '#4A7C5C' : '#EDF1F6'}
                   stroke={injectionSite === 'left_thigh' ? '#4A7C5C' : '#C2CCD9'} strokeWidth="1.5" className="cursor-pointer"
-                  onClick={() => setInjectionSite('left_thigh')} />
+                  role="radio" aria-checked={injectionSite === 'left_thigh'} aria-label="Left thigh" tabIndex={0}
+                  onClick={() => setInjectionSite('left_thigh')} onKeyDown={e => e.key === 'Enter' && setInjectionSite('left_thigh')} />
                 <circle cx="120" cy="220" r="12" fill={injectionSite === 'right_thigh' ? '#4A7C5C' : '#EDF1F6'}
                   stroke={injectionSite === 'right_thigh' ? '#4A7C5C' : '#C2CCD9'} strokeWidth="1.5" className="cursor-pointer"
-                  onClick={() => setInjectionSite('right_thigh')} />
+                  role="radio" aria-checked={injectionSite === 'right_thigh'} aria-label="Right thigh" tabIndex={0}
+                  onClick={() => setInjectionSite('right_thigh')} onKeyDown={e => e.key === 'Enter' && setInjectionSite('right_thigh')} />
               </svg>
               <div className="grid grid-cols-2 gap-2">
                 {INJECTION_SITES.map(site => (
@@ -265,8 +272,8 @@ export default function DoseLog() {
           </div>
 
           <div>
-            <label className="text-label text-slate-500 uppercase mb-2 block">Date & time</label>
-            <input type="datetime-local" value={doseDateTime} max={new Date().toISOString().slice(0, 16)} onChange={e => setDoseDateTime(e.target.value)}
+            <label htmlFor="dose-datetime" className="text-label text-slate-500 uppercase mb-2 block">Date & time</label>
+            <input id="dose-datetime" type="datetime-local" value={doseDateTime} max={new Date().toISOString().slice(0, 16)} onChange={e => setDoseDateTime(e.target.value)}
               className="w-full border-2 border-slate-200 rounded-md px-4 py-3 text-body-lg bg-white focus:border-slate-700 focus:outline-none" />
             {isBackdated && (
               <p className="text-body-sm text-amber-500 mt-1">Backdated · {Math.round((Date.now() - new Date(doseDateTime).getTime()) / (1000 * 60 * 60 * 24))} days ago</p>
@@ -274,8 +281,8 @@ export default function DoseLog() {
           </div>
 
           <div>
-            <label className="text-label text-slate-500 uppercase mb-2 block">Notes (optional)</label>
-            <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2}
+            <label htmlFor="dose-notes" className="text-label text-slate-500 uppercase mb-2 block">Notes (optional)</label>
+            <textarea id="dose-notes" value={notes} onChange={e => setNotes(e.target.value)} rows={2}
               className="w-full border-2 border-slate-200 rounded-md px-4 py-3 text-body-lg bg-white focus:border-slate-700 focus:outline-none" />
           </div>
 
@@ -297,9 +304,10 @@ export default function DoseLog() {
         <h1 className="text-display-lg text-slate-900 mb-2">How are you feeling?</h1>
         <p className="text-body-lg text-slate-500 mb-6">This helps us tune meal suggestions. Skip any time.</p>
 
-        <div className="flex flex-wrap gap-3 mb-6">
+        <div className="flex flex-wrap gap-3 mb-6" role="group" aria-label="Side effects">
           {SIDE_EFFECTS.map(effect => (
             <button key={effect.key} onClick={() => toggleSideEffect(effect.key)}
+              aria-pressed={sideEffects.includes(effect.key)}
               className={`px-4 py-3 rounded-md text-body-md transition-colors ${
                 sideEffects.includes(effect.key)
                   ? effect.key === 'feeling_good' ? 'bg-green-100 text-green-600 border border-green-400' : 'bg-amber-100 text-amber-500 border border-amber-500'
@@ -320,10 +328,11 @@ export default function DoseLog() {
         )}
 
         <div className="mb-6">
-          <label className="text-label text-slate-500 uppercase mb-3 block">Energy level</label>
+          <label htmlFor="energy-level" className="text-label text-slate-500 uppercase mb-3 block">Energy level</label>
           <div className="flex items-center gap-4">
             <span className="text-body-sm text-slate-400">Drained</span>
-            <input type="range" min="1" max="5" value={energyLevel} onChange={e => setEnergyLevel(parseInt(e.target.value))}
+            <input id="energy-level" type="range" min="1" max="5" value={energyLevel} onChange={e => setEnergyLevel(parseInt(e.target.value))}
+              aria-valuemin={1} aria-valuemax={5} aria-valuenow={energyLevel} aria-valuetext={`${energyLevel} out of 5`}
               className="flex-1 accent-slate-700" />
             <span className="text-body-sm text-slate-400">Energized</span>
           </div>
@@ -351,9 +360,10 @@ export default function DoseLog() {
         </button>
       </div>
 
-      <div className="flex gap-2 mb-5">
+      <div className="flex gap-2 mb-5" role="tablist" aria-label="Filter by time range">
         {[{ key: 'all' as const, label: 'Last 90 days' }, { key: '30' as const, label: 'Last 30 days' }, { key: 'year' as const, label: 'This year' }].map(f => (
           <button key={f.key} onClick={() => setFilter(f.key)}
+            role="tab" aria-selected={filter === f.key}
             className={`px-3 py-1.5 rounded-pill text-body-sm transition-colors ${
               filter === f.key ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-500'
             }`}>

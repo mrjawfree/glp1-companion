@@ -83,8 +83,9 @@ export default function Profile() {
         {!user && (
           <>
             <div>
-              <label className="text-label text-slate-500 uppercase mb-2 block">Email</label>
+              <label htmlFor="onboarding-email" className="text-label text-slate-500 uppercase mb-2 block">Email</label>
               <input
+                id="onboarding-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -94,8 +95,9 @@ export default function Profile() {
               />
             </div>
             <div>
-              <label className="text-label text-slate-500 uppercase mb-2 block">Password</label>
+              <label htmlFor="onboarding-password" className="text-label text-slate-500 uppercase mb-2 block">Password</label>
               <input
+                id="onboarding-password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -110,7 +112,7 @@ export default function Profile() {
       </div>
 
       {error && (
-        <p className="text-rose-500 text-body-sm mb-4">{error}</p>
+        <p className="text-rose-500 text-body-sm mb-4" role="alert" aria-live="polite">{error}</p>
       )}
 
       <div className="mt-auto">

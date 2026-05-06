@@ -6,11 +6,13 @@ interface SegmentedControlProps<T extends string> {
 
 export default function SegmentedControl<T extends string>({ options, selected, onChange }: SegmentedControlProps<T>) {
   return (
-    <div className="flex bg-slate-100 rounded-md p-1">
+    <div className="flex bg-slate-100 rounded-md p-1" role="radiogroup">
       {options.map((opt) => (
         <button
           key={opt.value}
           onClick={() => onChange(opt.value)}
+          role="radio"
+          aria-checked={selected === opt.value}
           className={`flex-1 py-2.5 rounded-sm text-label text-center transition-all ${
             selected === opt.value
               ? 'bg-white text-slate-900 shadow-elevation-1'

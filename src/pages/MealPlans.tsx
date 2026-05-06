@@ -177,8 +177,8 @@ export default function MealPlans() {
   if (activePlan) {
     return (
       <div className="px-4 pt-5">
-        <button onClick={() => { setActivePlan(null); setEntries([]) }} className="flex items-center gap-2 text-slate-500 mb-4">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        <button onClick={() => { setActivePlan(null); setEntries([]) }} className="flex items-center gap-2 text-slate-500 mb-4" aria-label="Back to meal plans">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           Back
         </button>
 
@@ -187,9 +187,11 @@ export default function MealPlans() {
           {activePlan.calories_target} kcal · {activePlan.protein_target_g}g protein daily target
         </p>
 
-        <div className="flex gap-1 overflow-x-auto pb-3 -mx-4 px-4 mb-4">
+        <div className="flex gap-1 overflow-x-auto pb-3 -mx-4 px-4 mb-4" role="tablist" aria-label="Day of week">
           {DAY_NAMES.map((name, i) => (
             <button key={i} onClick={() => setSelectedDay(i)}
+              role="tab" aria-selected={selectedDay === i}
+              aria-label={['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][i]}
               className={`px-3 py-2 rounded-md text-body-sm whitespace-nowrap transition-colors ${
                 selectedDay === i ? 'bg-slate-700 text-white' : 'bg-white border border-slate-200 text-slate-500'
               }`}>
@@ -224,12 +226,14 @@ export default function MealPlans() {
 
         {showAddEntry ? (
           <form onSubmit={handleAddEntry} className="bg-white rounded-md shadow-elevation-1 p-4 space-y-3 mt-4">
-            <input type="text" value={entryName} onChange={e => setEntryName(e.target.value)}
+            <label htmlFor="entry-name" className="sr-only">Meal name</label>
+            <input id="entry-name" type="text" value={entryName} onChange={e => setEntryName(e.target.value)}
               placeholder="Meal name" autoFocus
               className="w-full border-2 border-slate-200 rounded-md px-3 py-2 text-body-md bg-white focus:border-slate-700 focus:outline-none" />
-            <div className="flex gap-2">
+            <div className="flex gap-2" role="radiogroup" aria-label="Meal type">
               {MEAL_TYPES.map(t => (
                 <button key={t} type="button" onClick={() => setEntryType(t)}
+                  role="radio" aria-checked={entryType === t}
                   className={`px-2.5 py-1.5 rounded-md text-body-sm capitalize transition-colors ${
                     entryType === t ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-500'
                   }`}>
@@ -238,10 +242,16 @@ export default function MealPlans() {
               ))}
             </div>
             <div className="flex gap-3">
-              <input type="number" value={entryCal} onChange={e => setEntryCal(e.target.value)}
-                placeholder="Calories" className="flex-1 border-2 border-slate-200 rounded-md px-3 py-2 text-body-sm bg-white focus:border-slate-700 focus:outline-none" />
-              <input type="number" step="0.1" value={entryProtein} onChange={e => setEntryProtein(e.target.value)}
-                placeholder="Protein (g)" className="flex-1 border-2 border-slate-200 rounded-md px-3 py-2 text-body-sm bg-white focus:border-slate-700 focus:outline-none" />
+              <div className="flex-1">
+                <label htmlFor="entry-cal" className="sr-only">Calories</label>
+                <input id="entry-cal" type="number" value={entryCal} onChange={e => setEntryCal(e.target.value)}
+                  placeholder="Calories" className="w-full border-2 border-slate-200 rounded-md px-3 py-2 text-body-sm bg-white focus:border-slate-700 focus:outline-none" />
+              </div>
+              <div className="flex-1">
+                <label htmlFor="entry-protein" className="sr-only">Protein (g)</label>
+                <input id="entry-protein" type="number" step="0.1" value={entryProtein} onChange={e => setEntryProtein(e.target.value)}
+                  placeholder="Protein (g)" className="w-full border-2 border-slate-200 rounded-md px-3 py-2 text-body-sm bg-white focus:border-slate-700 focus:outline-none" />
+              </div>
             </div>
             <div className="flex gap-2">
               <button type="submit" disabled={saving || !entryName.trim()}
@@ -273,8 +283,8 @@ export default function MealPlans() {
   if (selectedPlan) {
     return (
       <div className="px-4 pt-5">
-        <button onClick={() => setSelectedPlan(null)} className="flex items-center gap-2 text-slate-500 mb-4">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        <button onClick={() => setSelectedPlan(null)} className="flex items-center gap-2 text-slate-500 mb-4" aria-label="Back to meal plans">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           Back
         </button>
         <div className="w-full h-48 bg-warm-white-2 rounded-md mb-4" />
@@ -288,9 +298,9 @@ export default function MealPlans() {
         </div>
 
         <div className="bg-green-100 rounded-md p-4 mb-5">
-          <button className="flex items-center justify-between w-full text-left">
+          <button className="flex items-center justify-between w-full text-left" aria-expanded="true">
             <span className="text-body-md font-semibold text-green-600">Why this works for GLP-1</span>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 7.5L10 12.5L15 7.5" stroke="#4A7C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 7.5L10 12.5L15 7.5" stroke="#4A7C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </button>
           <ul className="mt-3 space-y-2 text-body-sm text-green-600">
             <li>High in protein to help preserve lean mass during weight loss</li>
@@ -317,9 +327,10 @@ export default function MealPlans() {
     <div className="px-4 pt-5">
       <h1 className="text-title-lg text-slate-900 mb-4">Meals</h1>
 
-      <div className="flex gap-2 overflow-x-auto pb-3 -mx-4 px-4 mb-4">
+      <div className="flex gap-2 overflow-x-auto pb-3 -mx-4 px-4 mb-4" role="group" aria-label="Meal plan filters">
         {FILTERS.map(filter => (
           <button key={filter} onClick={() => toggleFilter(filter)}
+            aria-pressed={activeFilters.includes(filter)}
             className={`px-3 py-1.5 rounded-pill text-body-sm whitespace-nowrap transition-colors ${
               activeFilters.includes(filter)
                 ? 'bg-slate-700 text-white'
@@ -330,9 +341,10 @@ export default function MealPlans() {
         ))}
       </div>
 
-      <div className="flex gap-1 mb-5 bg-slate-100 rounded-md p-1">
+      <div className="flex gap-1 mb-5 bg-slate-100 rounded-md p-1" role="tablist" aria-label="Meal plan sections">
         {(['discover', 'saved', 'plans'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
+            role="tab" aria-selected={tab === t}
             className={`flex-1 py-2 rounded-md text-label transition-colors capitalize ${
               tab === t ? 'bg-white text-slate-700 shadow-elevation-1' : 'text-slate-400'
             }`}>

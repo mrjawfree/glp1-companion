@@ -56,8 +56,9 @@ export default function WeightGoal() {
       </div>
 
       <div className="mb-4">
-        <label className="text-label text-slate-500 uppercase mb-2 block">Current weight</label>
+        <label htmlFor="current-weight" className="text-label text-slate-500 uppercase mb-2 block">Current weight</label>
         <input
+          id="current-weight"
           type="number"
           inputMode="decimal"
           value={data.currentWeight ?? ''}
@@ -71,8 +72,9 @@ export default function WeightGoal() {
       </div>
 
       <div className="mb-4">
-        <label className="text-label text-slate-500 uppercase mb-2 block">Goal weight</label>
+        <label htmlFor="goal-weight" className="text-label text-slate-500 uppercase mb-2 block">Goal weight</label>
         <input
+          id="goal-weight"
           type="number"
           inputMode="decimal"
           value={data.goalWeight ?? ''}

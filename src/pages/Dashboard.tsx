@@ -50,7 +50,7 @@ function NutritionRing({ protein, fiber, hydration, proteinGoal, fiberGoal }: {
 
   return (
     <div className="flex flex-col items-center">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label={`Daily nutrition: ${protein}g protein of ${proteinGoal}g goal, ${fiber}g fiber of ${fiberGoal}g goal, ${hydration} of 8 glasses water`}>
         {drawArc(68, protein / proteinGoal, '#4A7C5C', 10)}
         {drawArc(54, fiber / fiberGoal, '#8995A8', 8)}
         {drawArc(42, hydration / 8, '#C2CCD9', 6)}
@@ -82,7 +82,7 @@ function StreakRow({ streak, days }: { streak: number; days: ('logged' | 'partia
       <div className="flex gap-1.5">
         {days.map((d, i) => (
           <div key={i} className={`w-8 h-8 rounded-full ${colors[d]} flex items-center justify-center`}>
-            {d === 'logged' && <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 9L10 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+            {d === 'logged' && <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2 6L5 9L10 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
           </div>
         ))}
       </div>
@@ -189,7 +189,7 @@ export default function Dashboard() {
     <div className="px-4 pt-5">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-title-lg text-slate-900">{getGreeting()}, {displayName}.</h1>
-        <button onClick={() => navigate('/settings')} className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 text-body-md font-semibold">
+        <button onClick={() => navigate('/settings')} className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 text-body-md font-semibold" aria-label="Go to profile settings">
           {displayName[0]?.toUpperCase()}
         </button>
       </div>
@@ -205,12 +205,12 @@ export default function Dashboard() {
       >
         <div className="flex items-center gap-3">
           {doseStatus.status === 'logged' && (
-            <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center" aria-hidden="true">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8L7 12L13 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </div>
           )}
           {doseStatus.status === 'overdue' && (
-            <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center" aria-hidden="true">
               <span className="text-white font-semibold text-body-sm">!</span>
             </div>
           )}

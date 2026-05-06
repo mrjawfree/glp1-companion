@@ -34,6 +34,7 @@ export default function NumericStepper({
       <button
         onClick={decrement}
         disabled={value !== null && value <= min}
+        aria-label="Decrease value"
         className="w-11 h-11 rounded-md bg-slate-100 text-slate-700 flex items-center justify-center text-title-lg hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
       >
         −
@@ -61,6 +62,7 @@ export default function NumericStepper({
       <button
         onClick={increment}
         disabled={value !== null && value >= max}
+        aria-label="Increase value"
         className="w-11 h-11 rounded-md bg-slate-100 text-slate-700 flex items-center justify-center text-title-lg hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
       >
         +

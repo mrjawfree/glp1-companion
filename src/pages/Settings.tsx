@@ -95,8 +95,8 @@ export default function Settings() {
   if (showUpgrade) {
     return (
       <div className="px-4 pt-5">
-        <button onClick={() => setShowUpgrade(false)} className="flex items-center gap-2 text-slate-500 mb-6">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        <button onClick={() => setShowUpgrade(false)} className="flex items-center gap-2 text-slate-500 mb-6" aria-label="Back to profile">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           Back
         </button>
 
@@ -112,7 +112,7 @@ export default function Settings() {
             { title: 'Custom macro goals', desc: 'Personalized protein, fiber, and calorie targets' },
           ].map(b => (
             <div key={b.title} className="flex gap-3 items-start">
-              <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center mt-0.5">
+              <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center mt-0.5" aria-hidden="true">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#4A7C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </div>
               <div>
@@ -123,8 +123,9 @@ export default function Settings() {
           ))}
         </div>
 
-        <div className="flex gap-2 bg-slate-100 rounded-md p-1 mb-6">
+        <div className="flex gap-2 bg-slate-100 rounded-md p-1 mb-6" role="radiogroup" aria-label="Billing period">
           <button onClick={() => setPlan('monthly')}
+            role="radio" aria-checked={plan === 'monthly'}
             className={`flex-1 py-3 rounded-md text-center transition-colors ${
               plan === 'monthly' ? 'bg-white text-slate-700 shadow-elevation-1' : 'text-slate-400'
             }`}>
@@ -132,6 +133,7 @@ export default function Settings() {
             <p className="text-body-sm text-slate-500">$9.99/mo</p>
           </button>
           <button onClick={() => setPlan('annual')}
+            role="radio" aria-checked={plan === 'annual'}
             className={`flex-1 py-3 rounded-md text-center transition-colors relative ${
               plan === 'annual' ? 'bg-white text-slate-700 shadow-elevation-1' : 'text-slate-400'
             }`}>
@@ -158,8 +160,8 @@ export default function Settings() {
   if (showSettings) {
     return (
       <div className="px-4 pt-5">
-        <button onClick={() => setShowSettings(false)} className="flex items-center gap-2 text-slate-500 mb-6">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        <button onClick={() => setShowSettings(false)} className="flex items-center gap-2 text-slate-500 mb-6" aria-label="Back to profile">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           Back
         </button>
 
@@ -167,24 +169,25 @@ export default function Settings() {
 
         <form onSubmit={handleSaveSettings} className="space-y-5">
           <div>
-            <label className="text-label text-slate-500 uppercase mb-2 block">Medication name</label>
-            <input type="text" value={medName} onChange={e => setMedName(e.target.value)}
+            <label htmlFor="settings-med-name" className="text-label text-slate-500 uppercase mb-2 block">Medication name</label>
+            <input id="settings-med-name" type="text" value={medName} onChange={e => setMedName(e.target.value)}
               placeholder="e.g. Ozempic"
               className="w-full border-2 border-slate-200 rounded-md px-4 py-3 text-body-lg bg-white focus:border-slate-700 focus:outline-none" />
           </div>
 
           <div>
-            <label className="text-label text-slate-500 uppercase mb-2 block">Current dose</label>
-            <input type="text" value={medDose} onChange={e => setMedDose(e.target.value)}
+            <label htmlFor="settings-med-dose" className="text-label text-slate-500 uppercase mb-2 block">Current dose</label>
+            <input id="settings-med-dose" type="text" value={medDose} onChange={e => setMedDose(e.target.value)}
               placeholder="e.g. 0.5 mg"
               className="w-full border-2 border-slate-200 rounded-md px-4 py-3 text-body-lg bg-white focus:border-slate-700 focus:outline-none" />
           </div>
 
           <div>
-            <label className="text-label text-slate-500 uppercase mb-2 block">Injection day</label>
-            <div className="flex flex-wrap gap-2">
+            <label id="injection-day-label" className="text-label text-slate-500 uppercase mb-2 block">Injection day</label>
+            <div className="flex flex-wrap gap-2" role="radiogroup" aria-labelledby="injection-day-label">
               {DAYS.map(day => (
                 <button key={day} type="button" onClick={() => setInjDay(injDay === day ? '' : day)}
+                  role="radio" aria-checked={injDay === day} aria-label={day}
                   className={`px-3 py-2 rounded-md text-body-sm capitalize transition-colors ${
                     injDay === day ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-500'
                   }`}>
@@ -195,21 +198,22 @@ export default function Settings() {
           </div>
 
           <div>
-            <label className="text-label text-slate-500 uppercase mb-2 block">Goal weight (lbs)</label>
-            <input type="number" step="0.1" value={goalWeight} onChange={e => setGoalWeight(e.target.value)}
+            <label htmlFor="settings-goal-weight" className="text-label text-slate-500 uppercase mb-2 block">Goal weight (lbs)</label>
+            <input id="settings-goal-weight" type="number" step="0.1" value={goalWeight} onChange={e => setGoalWeight(e.target.value)}
               placeholder="150"
               className="w-full border-2 border-slate-200 rounded-md px-4 py-3 text-body-lg bg-white focus:border-slate-700 focus:outline-none" />
           </div>
 
           <div className="flex items-center justify-between py-3">
-            <span className="text-body-md text-slate-700">Dose reminders</span>
+            <span id="dose-reminders-label" className="text-body-md text-slate-700">Dose reminders</span>
             <button type="button" onClick={() => setNotifEnabled(!notifEnabled)}
+              role="switch" aria-checked={notifEnabled} aria-labelledby="dose-reminders-label"
               className={`w-12 h-7 rounded-full transition-colors relative ${
                 notifEnabled ? 'bg-green-600' : 'bg-slate-200'
               }`}>
               <span className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow-elevation-1 transition-transform ${
                 notifEnabled ? 'left-[22px]' : 'left-0.5'
-              }`} />
+              }`} aria-hidden="true" />
             </button>
           </div>
 

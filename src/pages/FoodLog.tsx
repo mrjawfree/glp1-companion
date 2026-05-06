@@ -38,7 +38,7 @@ function MacroBar({ protein, fat, carbs }: { protein: number; fat: number; carbs
   const total = protein + fat + carbs
   if (total === 0) return null
   return (
-    <div className="flex h-2 rounded-pill overflow-hidden bg-slate-100">
+    <div className="flex h-2 rounded-pill overflow-hidden bg-slate-100" role="img" aria-label={`Macros: ${protein}g protein, ${fat}g fat, ${carbs}g carbs`}>
       <div className="bg-green-600 transition-all" style={{ width: `${(protein / total) * 100}%` }} />
       <div className="bg-amber-500 transition-all" style={{ width: `${(fat / total) * 100}%` }} />
       <div className="bg-slate-400 transition-all" style={{ width: `${(carbs / total) * 100}%` }} />
@@ -137,10 +137,12 @@ export default function FoodLog() {
     return (
       <div className="px-4 pt-5">
         <div className="flex items-center gap-3 mb-5">
-          <button onClick={() => setView('daily')} className="text-slate-500">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M15 19L8 12L15 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <button onClick={() => setView('daily')} className="text-slate-500" aria-label="Back to food log">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 19L8 12L15 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </button>
+          <label htmlFor="food-search" className="sr-only">Search food</label>
           <input
+            id="food-search"
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
@@ -164,7 +166,7 @@ export default function FoodLog() {
                     {food.protein}g P · {food.fat}g F · {food.carbs}g C · {food.calories} kcal
                   </p>
                 </div>
-                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-body-lg font-semibold">
+                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-body-lg font-semibold" aria-hidden="true">
                   +
                 </div>
               </button>
@@ -184,25 +186,26 @@ export default function FoodLog() {
     return (
       <div className="px-4 pt-5">
         <div className="flex items-center gap-3 mb-5">
-          <button onClick={() => setView('add')} className="text-slate-500">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M15 19L8 12L15 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <button onClick={() => setView('add')} className="text-slate-500" aria-label="Back to food search">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 19L8 12L15 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </button>
           <h1 className="text-title-lg text-slate-900">Log food</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="text-label text-slate-500 uppercase mb-2 block">Food name</label>
-            <input type="text" value={foodName} onChange={e => setFoodName(e.target.value)}
+            <label htmlFor="food-name" className="text-label text-slate-500 uppercase mb-2 block">Food name</label>
+            <input id="food-name" type="text" value={foodName} onChange={e => setFoodName(e.target.value)}
               placeholder="What did you eat?" required
               className="w-full border-2 border-slate-200 rounded-md px-4 py-3 text-body-lg bg-white focus:border-slate-700 focus:outline-none" />
           </div>
 
           <div>
-            <label className="text-label text-slate-500 uppercase mb-2 block">Meal</label>
-            <div className="flex gap-1 bg-slate-100 rounded-md p-1">
+            <label id="meal-type-label" className="text-label text-slate-500 uppercase mb-2 block">Meal</label>
+            <div className="flex gap-1 bg-slate-100 rounded-md p-1" role="tablist" aria-labelledby="meal-type-label">
               {MEAL_TYPES.map(m => (
                 <button key={m} type="button" onClick={() => setMealType(m)}
+                  role="tab" aria-selected={mealType === m}
                   className={`flex-1 py-2 rounded-md text-label transition-colors capitalize ${
                     mealType === m ? 'bg-white text-slate-700 shadow-elevation-1' : 'text-slate-400'
                   }`}>
@@ -216,23 +219,23 @@ export default function FoodLog() {
             <label className="text-label text-slate-500 uppercase mb-2 block">Macros</label>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <span className="text-body-sm text-slate-400 mb-1 block">Protein (g)</span>
-                <input type="number" value={proteinG} onChange={e => setProteinG(e.target.value)}
+                <label htmlFor="food-protein" className="text-body-sm text-slate-400 mb-1 block">Protein (g)</label>
+                <input id="food-protein" type="number" value={proteinG} onChange={e => setProteinG(e.target.value)}
                   placeholder="0" className="w-full border-2 border-slate-200 rounded-md px-3 py-2 text-body-lg bg-white focus:border-slate-700 focus:outline-none" />
               </div>
               <div>
-                <span className="text-body-sm text-slate-400 mb-1 block">Fiber (g)</span>
-                <input type="number" value={fiberG} onChange={e => setFiberG(e.target.value)}
+                <label htmlFor="food-fiber" className="text-body-sm text-slate-400 mb-1 block">Fiber (g)</label>
+                <input id="food-fiber" type="number" value={fiberG} onChange={e => setFiberG(e.target.value)}
                   placeholder="0" className="w-full border-2 border-slate-200 rounded-md px-3 py-2 text-body-lg bg-white focus:border-slate-700 focus:outline-none" />
               </div>
               <div>
-                <span className="text-body-sm text-slate-400 mb-1 block">Fat (g)</span>
-                <input type="number" value={fatG} onChange={e => setFatG(e.target.value)}
+                <label htmlFor="food-fat" className="text-body-sm text-slate-400 mb-1 block">Fat (g)</label>
+                <input id="food-fat" type="number" value={fatG} onChange={e => setFatG(e.target.value)}
                   placeholder="0" className="w-full border-2 border-slate-200 rounded-md px-3 py-2 text-body-lg bg-white focus:border-slate-700 focus:outline-none" />
               </div>
               <div>
-                <span className="text-body-sm text-slate-400 mb-1 block">Carbs (g)</span>
-                <input type="number" value={carbsG} onChange={e => setCarbsG(e.target.value)}
+                <label htmlFor="food-carbs" className="text-body-sm text-slate-400 mb-1 block">Carbs (g)</label>
+                <input id="food-carbs" type="number" value={carbsG} onChange={e => setCarbsG(e.target.value)}
                   placeholder="0" className="w-full border-2 border-slate-200 rounded-md px-3 py-2 text-body-lg bg-white focus:border-slate-700 focus:outline-none" />
               </div>
             </div>
@@ -249,8 +252,8 @@ export default function FoodLog() {
           </div>
 
           <div>
-            <span className="text-body-sm text-slate-400 mb-1 block">Calories (auto-calculated or override)</span>
-            <input type="number" value={calories} onChange={e => setCalories(e.target.value)}
+            <label htmlFor="food-calories" className="text-body-sm text-slate-400 mb-1 block">Calories (auto-calculated or override)</label>
+            <input id="food-calories" type="number" value={calories} onChange={e => setCalories(e.target.value)}
               placeholder={String(Math.round((parseFloat(proteinG) || 0) * 4 + (parseFloat(fatG) || 0) * 9 + (parseFloat(carbsG) || 0) * 4))}
               className="w-full border-2 border-slate-200 rounded-md px-3 py-2 text-body-lg bg-white focus:border-slate-700 focus:outline-none text-slate-500" />
           </div>
@@ -274,7 +277,8 @@ export default function FoodLog() {
         </button>
       </div>
 
-      <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)}
+      <label htmlFor="food-date" className="sr-only">Select date</label>
+      <input id="food-date" type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)}
         className="w-full border-2 border-slate-200 rounded-md px-4 py-2 text-body-md bg-white mb-5 focus:border-slate-700 focus:outline-none" />
 
       <div className="bg-white rounded-md shadow-elevation-1 p-5 mb-5">
@@ -294,14 +298,16 @@ export default function FoodLog() {
       </div>
 
       <div className="flex items-center gap-3 mb-5">
-        <span className="text-body-sm text-slate-500">Hydration</span>
-        <div className="flex gap-1">
+        <span id="hydration-label" className="text-body-sm text-slate-500">Hydration</span>
+        <div className="flex gap-1" role="group" aria-labelledby="hydration-label">
           {Array.from({ length: 8 }, (_, i) => (
             <button key={i} onClick={() => setHydration(i < hydration ? i : i + 1)}
+              aria-label={`${i + 1} glass${i > 0 ? 'es' : ''} of water`}
+              aria-pressed={i < hydration}
               className={`w-7 h-7 rounded-full text-body-sm transition-colors ${
                 i < hydration ? 'bg-info text-white' : 'bg-slate-100 text-slate-300'
               }`}>
-              💧
+              <span aria-hidden="true">💧</span>
             </button>
           ))}
         </div>
