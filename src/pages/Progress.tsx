@@ -142,7 +142,10 @@ export default function Progress() {
           const sw = weightUnit === 'lbs' ? startWeight : startWeight * KG_TO_LBS
           const pw = weightUnit === 'lbs' ? prevWeight : prevWeight * KG_TO_LBS
           const hit = checkMilestone(sw, pw, newWeight)
-          if (hit) setMilestone(hit)
+          if (hit) {
+            const displayMilestone = weightUnit === 'kg' ? parseFloat((hit / KG_TO_LBS).toFixed(1)) : hit
+            setMilestone(displayMilestone)
+          }
         }
       }
       setShowForm(false)
