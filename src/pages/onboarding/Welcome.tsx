@@ -1,7 +1,16 @@
 import { useNavigate } from 'react-router-dom'
+import { useOnboarding } from '../../hooks/useOnboarding'
 
 export default function Welcome() {
   const navigate = useNavigate()
+  const { reset } = useOnboarding()
+
+  const handleSkip = () => {
+    reset()
+    localStorage.setItem('glp1_onboarding_skipped', 'true')
+    localStorage.removeItem('glp1_onboarding_route')
+    navigate('/login')
+  }
 
   return (
     <div className="min-h-screen bg-warm-white flex flex-col">
@@ -26,7 +35,7 @@ export default function Welcome() {
           Get started
         </button>
         <button
-          onClick={() => navigate('/')}
+          onClick={handleSkip}
           className="mt-4 text-slate-400 text-body-md hover:underline"
         >
           Skip for now

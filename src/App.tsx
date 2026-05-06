@@ -16,6 +16,7 @@ import WeightGoal from './pages/onboarding/WeightGoal'
 import Profile from './pages/onboarding/Profile'
 import NotificationPrimer from './pages/onboarding/NotificationPrimer'
 import ReviewConfirm from './pages/onboarding/ReviewConfirm'
+import Success from './pages/onboarding/Success'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { OnboardingProvider } from './hooks/useOnboarding'
 
@@ -60,6 +61,7 @@ export default function App() {
             <Route path="/onboarding/weight-goal" element={<WeightGoal />} />
             <Route path="/onboarding/review" element={<ReviewConfirm />} />
             <Route path="/onboarding/profile" element={<Profile />} />
+            <Route path="/onboarding/success" element={<Success />} />
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
               <Route index element={<Dashboard />} />
