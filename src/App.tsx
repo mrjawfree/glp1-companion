@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useEffect, lazy, Suspense } from 'react'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { OnboardingProvider } from './hooks/useOnboarding'
+import { ErrorBoundary, RouteErrorFallback } from './components/ErrorBoundary'
 
 const Layout = lazy(() => import('./components/Layout'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
@@ -48,31 +49,41 @@ function LoadingFallback() {
   return <div className="flex items-center justify-center h-screen bg-warm-white text-slate-500">Loading...</div>
 }
 
+function RouteErrorBoundary({ children }: { children: React.ReactNode }) {
+  return (
+    <ErrorBoundary fallback={<RouteErrorFallback onReset={() => window.location.reload()} />}>
+      {children}
+    </ErrorBoundary>
+  )
+}
+
 export default function App() {
   return (
-    <AuthProvider>
-      <OnboardingProvider>
-        <OnboardingRouteTracker>
-          <Suspense fallback={<LoadingFallback />}>
-          <Routes>
-            <Route path="/onboarding" element={<OnboardingResume />} />
-            <Route path="/onboarding/profile-setup" element={<ProfileSetup />} />
-            <Route path="/onboarding/goals" element={<GoalSetting />} />
-            <Route path="/onboarding/notifications" element={<NotificationPrimer />} />
-            <Route path="/onboarding/first-action" element={<FirstAction />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-              <Route index element={<Dashboard />} />
-              <Route path="doses" element={<DoseLog />} />
-              <Route path="meals" element={<MealPlans />} />
-              <Route path="food" element={<FoodLog />} />
-              <Route path="progress" element={<Progress />} />
-              <Route path="settings" element={<Settings />} />
-            </Route>
-          </Routes>
-          </Suspense>
-        </OnboardingRouteTracker>
-      </OnboardingProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <OnboardingProvider>
+          <OnboardingRouteTracker>
+            <Suspense fallback={<LoadingFallback />}>
+            <Routes>
+              <Route path="/onboarding" element={<RouteErrorBoundary><OnboardingResume /></RouteErrorBoundary>} />
+              <Route path="/onboarding/profile-setup" element={<RouteErrorBoundary><ProfileSetup /></RouteErrorBoundary>} />
+              <Route path="/onboarding/goals" element={<RouteErrorBoundary><GoalSetting /></RouteErrorBoundary>} />
+              <Route path="/onboarding/notifications" element={<RouteErrorBoundary><NotificationPrimer /></RouteErrorBoundary>} />
+              <Route path="/onboarding/first-action" element={<RouteErrorBoundary><FirstAction /></RouteErrorBoundary>} />
+              <Route path="/login" element={<RouteErrorBoundary><Login /></RouteErrorBoundary>} />
+              <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+                <Route index element={<RouteErrorBoundary><Dashboard /></RouteErrorBoundary>} />
+                <Route path="doses" element={<RouteErrorBoundary><DoseLog /></RouteErrorBoundary>} />
+                <Route path="meals" element={<RouteErrorBoundary><MealPlans /></RouteErrorBoundary>} />
+                <Route path="food" element={<RouteErrorBoundary><FoodLog /></RouteErrorBoundary>} />
+                <Route path="progress" element={<RouteErrorBoundary><Progress /></RouteErrorBoundary>} />
+                <Route path="settings" element={<RouteErrorBoundary><Settings /></RouteErrorBoundary>} />
+              </Route>
+            </Routes>
+            </Suspense>
+          </OnboardingRouteTracker>
+        </OnboardingProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   )
 }
