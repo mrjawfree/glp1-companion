@@ -6,13 +6,16 @@ interface ProgressEntry {
   id: string
   recorded_at: string
   weight_kg: number | null
+  weight_lbs: number | null
   waist_cm: number | null
   energy_level: number | null
+  measurements: Record<string, number> | null
   notes: string | null
 }
 
 type Tab = 'weight' | 'body' | 'energy' | 'doses'
 type Range = '30' | '90' | '365'
+type WeightUnit = 'lbs' | 'kg'
 
 function TrendChart({ entries, accessor, range }: {
   entries: ProgressEntry[]; accessor: (e: ProgressEntry) => number | null; range: Range
@@ -65,13 +68,16 @@ function TrendChart({ entries, accessor, range }: {
   )
 }
 
+const KG_TO_LBS = 2.20462
+
 export default function Progress() {
   const { user } = useAuth()
   const [entries, setEntries] = useState<ProgressEntry[]>([])
   const [tab, setTab] = useState<Tab>('weight')
   const [range, setRange] = useState<Range>('30')
   const [showForm, setShowForm] = useState(false)
-  const [weightKg, setWeightKg] = useState('')
+  const [weightUnit, setWeightUnit] = useState<WeightUnit>('lbs')
+  const [weightValue, setWeightValue] = useState('')
   const [waistCm, setWaistCm] = useState('')
   const [energyLevel, setEnergyLevel] = useState(3)
   const [saving, setSaving] = useState(false)
@@ -93,16 +99,21 @@ export default function Progress() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
+    const parsed = weightValue ? parseFloat(weightValue) : null
+    const weightKg = parsed !== null ? (weightUnit === 'lbs' ? parsed / KG_TO_LBS : parsed) : null
+    const weightLbs = parsed !== null ? (weightUnit === 'lbs' ? parsed : parsed * KG_TO_LBS) : null
+
     const { error } = await supabase.from('progress_tracking').insert({
       user_id: user!.id,
       recorded_at: new Date().toISOString().split('T')[0],
-      weight_kg: weightKg ? parseFloat(weightKg) : null,
+      weight_kg: weightKg ? parseFloat(weightKg.toFixed(1)) : null,
+      weight_lbs: weightLbs ? parseFloat(weightLbs.toFixed(1)) : null,
       waist_cm: waistCm ? parseFloat(waistCm) : null,
       energy_level: energyLevel,
     })
     if (!error) {
       setShowForm(false)
-      setWeightKg('')
+      setWeightValue('')
       setWaistCm('')
       setEnergyLevel(3)
       loadEntries()
@@ -110,14 +121,24 @@ export default function Progress() {
     setSaving(false)
   }
 
-  const latestWeight = entries.find(e => e.weight_kg)?.weight_kg
+  const getWeight = (entry: ProgressEntry): number | null => {
+    if (weightUnit === 'lbs') {
+      return entry.weight_lbs ?? (entry.weight_kg ? parseFloat((entry.weight_kg * KG_TO_LBS).toFixed(1)) : null)
+    }
+    return entry.weight_kg
+  }
+
+  const latestWeight = entries.find(e => getWeight(e) !== null)
+  const latestWeightVal = latestWeight ? getWeight(latestWeight) : null
+
   const weekEntries = entries.filter(e => {
     const d = new Date(e.recorded_at)
     const now = new Date()
     return (now.getTime() - d.getTime()) < 7 * 24 * 60 * 60 * 1000
   })
-  const weekAvg = weekEntries.length > 0
-    ? weekEntries.reduce((s, e) => s + (e.weight_kg || 0), 0) / weekEntries.filter(e => e.weight_kg).length
+  const weekWeights = weekEntries.filter(e => getWeight(e) !== null)
+  const weekAvg = weekWeights.length > 0
+    ? weekWeights.reduce((s, e) => s + getWeight(e)!, 0) / weekWeights.length
     : null
 
   return (
@@ -144,9 +165,21 @@ export default function Progress() {
       {showForm && (
         <form onSubmit={handleSubmit} className="bg-white rounded-md shadow-elevation-1 p-5 mb-5 space-y-4">
           <div>
-            <label className="text-label text-slate-500 uppercase mb-2 block">Weight (kg)</label>
-            <input type="number" step="0.1" value={weightKg} onChange={e => setWeightKg(e.target.value)}
-              placeholder={latestWeight ? String(latestWeight) : '75.0'}
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-label text-slate-500 uppercase">Weight</label>
+              <div className="flex gap-1 bg-slate-100 rounded-md p-0.5">
+                {(['lbs', 'kg'] as WeightUnit[]).map(u => (
+                  <button key={u} type="button" onClick={() => setWeightUnit(u)}
+                    className={`px-2.5 py-1 rounded text-body-sm transition-colors ${
+                      weightUnit === u ? 'bg-white text-slate-700 shadow-sm' : 'text-slate-400'
+                    }`}>
+                    {u}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <input type="number" step="0.1" value={weightValue} onChange={e => setWeightValue(e.target.value)}
+              placeholder={latestWeightVal ? String(latestWeightVal) : weightUnit === 'lbs' ? '165.0' : '75.0'}
               className="w-full border-2 border-slate-200 rounded-md px-4 py-3 text-body-lg bg-white focus:border-slate-700 focus:outline-none" />
           </div>
           <div>
@@ -181,23 +214,37 @@ export default function Progress() {
         </form>
       )}
 
-      <div className="flex gap-2 mb-5">
-        {(['30', '90', '365'] as Range[]).map(r => (
-          <button key={r} onClick={() => setRange(r)}
-            className={`px-3 py-1.5 rounded-pill text-body-sm transition-colors ${
-              range === r ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-500'
-            }`}>
-            {r === '30' ? '30 days' : r === '90' ? '90 days' : '1 year'}
-          </button>
-        ))}
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex gap-2">
+          {(['30', '90', '365'] as Range[]).map(r => (
+            <button key={r} onClick={() => setRange(r)}
+              className={`px-3 py-1.5 rounded-pill text-body-sm transition-colors ${
+                range === r ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-500'
+              }`}>
+              {r === '30' ? '30 days' : r === '90' ? '90 days' : '1 year'}
+            </button>
+          ))}
+        </div>
+        {tab === 'weight' && (
+          <div className="flex gap-1 bg-slate-100 rounded-md p-0.5">
+            {(['lbs', 'kg'] as WeightUnit[]).map(u => (
+              <button key={u} onClick={() => setWeightUnit(u)}
+                className={`px-2 py-1 rounded text-body-sm transition-colors ${
+                  weightUnit === u ? 'bg-white text-slate-700 shadow-sm' : 'text-slate-400'
+                }`}>
+                {u}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {tab === 'weight' && (
         <div className="bg-white rounded-md shadow-elevation-1 p-5 mb-5">
-          <TrendChart entries={entries} accessor={e => e.weight_kg} range={range} />
+          <TrendChart entries={entries} accessor={getWeight} range={range} />
           {weekAvg && (
             <p className="text-body-sm text-slate-500 mt-3">
-              This week avg: {weekAvg.toFixed(1)} kg
+              This week avg: {weekAvg.toFixed(1)} {weightUnit}
             </p>
           )}
         </div>
@@ -213,7 +260,7 @@ export default function Progress() {
       {tab === 'energy' && (
         <div className="bg-white rounded-md shadow-elevation-1 p-5 mb-5">
           <TrendChart entries={entries} accessor={e => e.energy_level} range={range} />
-          <p className="text-body-sm text-slate-400 mt-3">Energy level (1–5 scale)</p>
+          <p className="text-body-sm text-slate-400 mt-3">Energy level (1-5 scale)</p>
         </div>
       )}
 
@@ -231,7 +278,7 @@ export default function Progress() {
               {new Date(entry.recorded_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             </p>
             <div className="flex gap-4 text-body-sm text-slate-500">
-              {entry.weight_kg && <span>{entry.weight_kg} kg</span>}
+              {getWeight(entry) !== null && <span>{getWeight(entry)} {weightUnit}</span>}
               {entry.waist_cm && <span>{entry.waist_cm} cm</span>}
               {entry.energy_level && (
                 <span className={`px-2 py-0.5 rounded-pill ${

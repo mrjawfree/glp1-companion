@@ -9,20 +9,78 @@ interface UserProfile {
   subscription_tier: string
 }
 
+interface UserSettings {
+  medication_name: string | null
+  medication_dose: string | null
+  injection_day: string | null
+  notification_enabled: boolean
+  goal_weight_lbs: number | null
+}
+
+const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const
+
 export default function Settings() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
   const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [settings, setSettings] = useState<UserSettings | null>(null)
   const [showUpgrade, setShowUpgrade] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
   const [plan, setPlan] = useState<'monthly' | 'annual'>('annual')
+  const [saving, setSaving] = useState(false)
+
+  const [medName, setMedName] = useState('')
+  const [medDose, setMedDose] = useState('')
+  const [injDay, setInjDay] = useState('')
+  const [notifEnabled, setNotifEnabled] = useState(false)
+  const [goalWeight, setGoalWeight] = useState('')
 
   useEffect(() => {
     if (user) {
       supabase.from('users').select('display_name, medication, subscription_tier').eq('id', user.id).single().then(({ data }) => {
         if (data) setProfile(data)
       })
+      loadSettings()
     }
   }, [user])
+
+  async function loadSettings() {
+    const { data } = await supabase
+      .from('user_settings')
+      .select('*')
+      .eq('user_id', user!.id)
+      .single()
+    if (data) {
+      setSettings(data)
+      setMedName(data.medication_name || '')
+      setMedDose(data.medication_dose || '')
+      setInjDay(data.injection_day || '')
+      setNotifEnabled(data.notification_enabled)
+      setGoalWeight(data.goal_weight_lbs ? String(data.goal_weight_lbs) : '')
+    }
+  }
+
+  async function handleSaveSettings(e: React.FormEvent) {
+    e.preventDefault()
+    setSaving(true)
+    const payload = {
+      user_id: user!.id,
+      medication_name: medName || null,
+      medication_dose: medDose || null,
+      injection_day: injDay || null,
+      notification_enabled: notifEnabled,
+      goal_weight_lbs: goalWeight ? parseFloat(goalWeight) : null,
+      updated_at: new Date().toISOString(),
+    }
+    if (settings) {
+      await supabase.from('user_settings').update(payload).eq('user_id', user!.id)
+    } else {
+      await supabase.from('user_settings').insert(payload)
+    }
+    await loadSettings()
+    setSaving(false)
+    setShowSettings(false)
+  }
 
   const handleSignOut = async () => {
     await signOut()
@@ -92,6 +150,73 @@ export default function Settings() {
     )
   }
 
+  if (showSettings) {
+    return (
+      <div className="px-4 pt-5">
+        <button onClick={() => setShowSettings(false)} className="flex items-center gap-2 text-slate-500 mb-6">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          Back
+        </button>
+
+        <h1 className="text-title-lg text-slate-900 mb-5">Medication & Goals</h1>
+
+        <form onSubmit={handleSaveSettings} className="space-y-5">
+          <div>
+            <label className="text-label text-slate-500 uppercase mb-2 block">Medication name</label>
+            <input type="text" value={medName} onChange={e => setMedName(e.target.value)}
+              placeholder="e.g. Ozempic"
+              className="w-full border-2 border-slate-200 rounded-md px-4 py-3 text-body-lg bg-white focus:border-slate-700 focus:outline-none" />
+          </div>
+
+          <div>
+            <label className="text-label text-slate-500 uppercase mb-2 block">Current dose</label>
+            <input type="text" value={medDose} onChange={e => setMedDose(e.target.value)}
+              placeholder="e.g. 0.5 mg"
+              className="w-full border-2 border-slate-200 rounded-md px-4 py-3 text-body-lg bg-white focus:border-slate-700 focus:outline-none" />
+          </div>
+
+          <div>
+            <label className="text-label text-slate-500 uppercase mb-2 block">Injection day</label>
+            <div className="flex flex-wrap gap-2">
+              {DAYS.map(day => (
+                <button key={day} type="button" onClick={() => setInjDay(injDay === day ? '' : day)}
+                  className={`px-3 py-2 rounded-md text-body-sm capitalize transition-colors ${
+                    injDay === day ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-500'
+                  }`}>
+                  {day.slice(0, 3)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-label text-slate-500 uppercase mb-2 block">Goal weight (lbs)</label>
+            <input type="number" step="0.1" value={goalWeight} onChange={e => setGoalWeight(e.target.value)}
+              placeholder="150"
+              className="w-full border-2 border-slate-200 rounded-md px-4 py-3 text-body-lg bg-white focus:border-slate-700 focus:outline-none" />
+          </div>
+
+          <div className="flex items-center justify-between py-3">
+            <span className="text-body-md text-slate-700">Dose reminders</span>
+            <button type="button" onClick={() => setNotifEnabled(!notifEnabled)}
+              className={`w-12 h-7 rounded-full transition-colors relative ${
+                notifEnabled ? 'bg-green-600' : 'bg-slate-200'
+              }`}>
+              <span className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow-elevation-1 transition-transform ${
+                notifEnabled ? 'left-[22px]' : 'left-0.5'
+              }`} />
+            </button>
+          </div>
+
+          <button type="submit" disabled={saving}
+            className="w-full bg-slate-700 text-white py-4 rounded-md text-label uppercase tracking-wider disabled:opacity-40 hover:bg-slate-900 transition-colors">
+            {saving ? 'Saving...' : 'Save preferences'}
+          </button>
+        </form>
+      </div>
+    )
+  }
+
   return (
     <div className="px-4 pt-5">
       <h1 className="text-title-lg text-slate-900 mb-5">Profile</h1>
@@ -108,6 +233,26 @@ export default function Settings() {
               <p className="text-body-sm text-green-600 capitalize mt-1">{profile.medication}</p>
             )}
           </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-md shadow-elevation-1 p-5 mb-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-body-md font-semibold text-slate-900">Medication & Goals</p>
+            <p className="text-body-sm text-slate-400">
+              {settings?.medication_name
+                ? `${settings.medication_name}${settings.medication_dose ? ` · ${settings.medication_dose}` : ''}`
+                : 'Not configured'}
+            </p>
+            {settings?.goal_weight_lbs && (
+              <p className="text-body-sm text-green-600 mt-1">Goal: {settings.goal_weight_lbs} lbs</p>
+            )}
+          </div>
+          <button onClick={() => setShowSettings(true)}
+            className="px-4 py-2 bg-slate-100 text-slate-700 text-label rounded-md hover:bg-slate-200 transition-colors">
+            Edit
+          </button>
         </div>
       </div>
 
