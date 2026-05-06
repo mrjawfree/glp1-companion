@@ -31,7 +31,7 @@ export default function OnboardingShell({ step, totalSteps, onBack, onSkip, chil
           />
         ))}
       </div>
-      <div className="flex-1 px-4 pb-8 flex flex-col">
+      <div key={step} className="flex-1 px-4 pb-8 flex flex-col animate-onboarding-in">
         {children}
       </div>
     </div>

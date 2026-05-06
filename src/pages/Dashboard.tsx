@@ -102,9 +102,13 @@ export default function Dashboard() {
   const [hydration, setHydration] = useState(0)
   const [streak, setStreak] = useState(0)
   const [streakDays, setStreakDays] = useState<('logged' | 'partial' | 'missed' | 'today' | 'future')[]>([])
+  const [showSetupNudge, setShowSetupNudge] = useState(false)
 
   useEffect(() => {
     if (!user) return
+    supabase.from('user_settings').select('onboarding_completed').eq('user_id', user.id).single().then(({ data }) => {
+      if (!data || !data.onboarding_completed) setShowSetupNudge(true)
+    })
     supabase.from('users').select('display_name, medication, current_dose').eq('id', user.id).single().then(({ data }) => {
       if (data) setProfile(data)
     })
@@ -188,6 +192,21 @@ export default function Dashboard() {
           {displayName[0]?.toUpperCase()}
         </button>
       </div>
+
+      {showSetupNudge && (
+        <button
+          onClick={() => navigate('/onboarding/medication')}
+          className="w-full rounded-md p-4 mb-5 text-left bg-green-100 border border-green-400 flex items-center gap-3"
+        >
+          <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center flex-shrink-0">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 4V16M4 10H16" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>
+          </div>
+          <div>
+            <span className="block text-body-lg font-semibold text-slate-900">Complete your setup</span>
+            <span className="block text-body-sm text-slate-500">Set up your medication and goals to get the most out of the app.</span>
+          </div>
+        </button>
+      )}
 
       <button
         onClick={() => navigate(doseStatus.status === 'logged' ? '/doses' : '/doses?log=true')}

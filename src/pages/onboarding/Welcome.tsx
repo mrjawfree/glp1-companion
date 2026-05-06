@@ -13,7 +13,7 @@ export default function Welcome() {
   }
 
   return (
-    <div className="min-h-screen bg-warm-white flex flex-col">
+    <div className="min-h-screen bg-warm-white flex flex-col animate-fade-in">
       <div className="flex-1 flex flex-col items-center justify-center px-4 text-center">
         <div className="w-48 h-48 mb-8 rounded-full bg-gradient-to-br from-slate-200 via-slate-100 to-green-100 flex items-center justify-center">
           <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
