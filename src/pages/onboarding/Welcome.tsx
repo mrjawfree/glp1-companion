@@ -20,7 +20,7 @@ export default function Welcome() {
           Track doses, plan meals that work with your medication, and notice how you feel.
         </p>
         <button
-          onClick={() => navigate('/onboarding/drug')}
+          onClick={() => navigate('/onboarding/medication')}
           className="w-full max-w-sm bg-slate-700 text-white py-4 rounded-md text-label uppercase tracking-wider hover:bg-slate-900 transition-colors"
         >
           Get started

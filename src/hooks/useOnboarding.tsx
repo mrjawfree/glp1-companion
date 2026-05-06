@@ -5,17 +5,13 @@ const STORAGE_KEY = 'glp1_onboarding'
 
 const defaultData: OnboardingData = {
   medication: null,
-  doseDay: null,
-  doseTime: '08:00',
-  currentDoseMg: null,
-  lastDoseDate: null,
-  goals: [],
-  displayName: '',
-  sex: null,
-  heightCm: null,
-  weightKg: null,
-  weightDeclined: false,
-  birthYear: null,
+  medicationOther: null,
+  injectionDays: [],
+  doseAmount: null,
+  doseUnit: 'mg',
+  currentWeight: null,
+  goalWeight: null,
+  weightUnit: 'lb',
 }
 
 interface OnboardingContextType {

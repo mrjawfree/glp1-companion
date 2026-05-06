@@ -9,9 +9,10 @@ import Progress from './pages/Progress'
 import Settings from './pages/Settings'
 import Login from './pages/Login'
 import Welcome from './pages/onboarding/Welcome'
-import DrugSelection from './pages/onboarding/DrugSelection'
-import DoseSchedule from './pages/onboarding/DoseSchedule'
-import Goals from './pages/onboarding/Goals'
+import MedicationSelect from './pages/onboarding/MedicationSelect'
+import InjectionDays from './pages/onboarding/InjectionDays'
+import DoseSetup from './pages/onboarding/DoseSetup'
+import WeightGoal from './pages/onboarding/WeightGoal'
 import Profile from './pages/onboarding/Profile'
 import NotificationPrimer from './pages/onboarding/NotificationPrimer'
 import { AuthProvider, useAuth } from './hooks/useAuth'
@@ -51,9 +52,11 @@ export default function App() {
         <OnboardingRouteTracker>
           <Routes>
             <Route path="/onboarding" element={<OnboardingResume />} />
-            <Route path="/onboarding/drug" element={<DrugSelection />} />
-            <Route path="/onboarding/schedule" element={<DoseSchedule />} />
-            <Route path="/onboarding/goals" element={<Goals />} />
+            <Route path="/onboarding/medication" element={<MedicationSelect />} />
+            <Route path="/onboarding/injection-days" element={<InjectionDays />} />
+            <Route path="/onboarding/dose" element={<DoseSetup />} />
+            {/* Screens 5-7 (Weight Goal, Review, Success) — next heartbeat */}
+            <Route path="/onboarding/weight-goal" element={<WeightGoal />} />
             <Route path="/onboarding/profile" element={<Profile />} />
             <Route path="/onboarding/notifications" element={<NotificationPrimer />} />
             <Route path="/login" element={<Login />} />

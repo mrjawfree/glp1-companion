@@ -16,15 +16,16 @@ export default function OnboardingShell({ step, totalSteps, onBack, onSkip, chil
             Back
           </button>
         ) : <div className="w-12" />}
-        {onSkip && (
+        <span className="text-body-sm text-slate-400">{step} of {totalSteps}</span>
+        {onSkip ? (
           <button onClick={onSkip} className="text-slate-400 text-body-md">Skip</button>
-        )}
+        ) : <div className="w-12" />}
       </div>
       <div className="flex justify-center gap-2 px-4 pb-5">
         {Array.from({ length: totalSteps }, (_, i) => (
           <div
             key={i}
-            className={`h-1 rounded-pill flex-1 transition-colors duration-200 ${
+            className={`h-1 rounded-pill flex-1 transition-colors duration-220 ${
               i < step ? 'bg-green-600' : i === step ? 'bg-slate-700' : 'bg-slate-200'
             }`}
           />

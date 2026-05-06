@@ -5,21 +5,19 @@ export type SubscriptionTier = 'free' | 'pro'
 export type SubscriptionPlan = 'monthly_9' | 'monthly_19'
 export type SubscriptionStatus = 'active' | 'cancelled' | 'past_due' | 'trialing'
 export type DoseCadence = 'weekly' | 'daily'
+export type DoseUnit = 'mg' | 'mL' | 'units'
+export type WeightUnit = 'lb' | 'kg'
 export type Goal = 'weight_loss' | 'blood_sugar' | 'reduce_side_effects' | 'sustainable_habits' | 'more_energy' | 'exploring'
 
 export interface OnboardingData {
   medication: Medication | null
-  doseDay: number | null
-  doseTime: string | null
-  currentDoseMg: number | null
-  lastDoseDate: string | null
-  goals: Goal[]
-  displayName: string
-  sex: 'male' | 'female' | 'other' | null
-  heightCm: number | null
-  weightKg: number | null
-  weightDeclined: boolean
-  birthYear: number | null
+  medicationOther: string | null
+  injectionDays: number[]
+  doseAmount: number | null
+  doseUnit: DoseUnit
+  currentWeight: number | null
+  goalWeight: number | null
+  weightUnit: WeightUnit
 }
 
 export const MEDICATION_INFO: Record<Medication, { brand: string; generic: string; cadence: DoseCadence }> = {
