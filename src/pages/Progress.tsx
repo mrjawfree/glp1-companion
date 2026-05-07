@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { trackEvent } from '../lib/analytics'
 import SparkChart from '../components/SparkChart'
 import StatTile from '../components/StatTile'
 import DayCircle from '../components/DayCircle'
@@ -24,6 +25,13 @@ interface ProgressEntry {
 
 interface DoseLog {
   id: string
+  logged_at: string
+}
+
+interface MealEntry {
+  id: string
+  meal_type: string
+  calories: number
   logged_at: string
 }
 
@@ -75,6 +83,7 @@ export default function Progress() {
   const [scrolledPast, setScrolledPast] = useState(false)
   const calendarRef = useRef<HTMLDivElement>(null)
 
+  const [meals, setMeals] = useState<MealEntry[]>([])
   const [weeklySheetOpen, setWeeklySheetOpen] = useState(false)
   const [weeklyMood, setWeeklyMood] = useState<number | null>(null)
 
@@ -91,14 +100,16 @@ export default function Progress() {
     if (!user) return
     setError(false)
     try {
-      const [entriesRes, doseRes, settingsRes] = await Promise.all([
+      const [entriesRes, doseRes, settingsRes, mealsRes] = await Promise.all([
         supabase.from('progress_tracking').select('*').eq('user_id', user.id).order('recorded_at', { ascending: false }).limit(365),
         supabase.from('dose_logs').select('id, logged_at').eq('user_id', user.id).order('logged_at', { ascending: false }).limit(90),
         supabase.from('user_settings').select('*').eq('user_id', user.id).single(),
+        supabase.from('meals').select('id, meal_type, calories, logged_at').eq('user_id', user.id).order('logged_at', { ascending: false }).limit(100),
       ])
       if (entriesRes.data) setEntries(entriesRes.data)
       if (doseRes.data) setDoseLogs(doseRes.data)
       if (settingsRes.data) setSettings(settingsRes.data)
+      if (mealsRes.data) setMeals(mealsRes.data)
     } catch {
       setError(true)
     } finally {
@@ -109,6 +120,10 @@ export default function Progress() {
   useEffect(() => {
     loadData()
   }, [loadData])
+
+  useEffect(() => {
+    if (!loading) trackEvent('progress_view')
+  }, [loading])
 
   useEffect(() => {
     const handleScroll = () => setScrolledPast(window.scrollY > 8)
@@ -395,6 +410,26 @@ export default function Progress() {
             <StatTile label="Current streak" value={streak > 0 ? `${streak} days` : '—'} variant="sage" />
           </div>
 
+          {/* Weekly Summary link */}
+          <div style={{ margin: '16px 16px 0' }}>
+            <button
+              type="button"
+              onClick={() => { setWeeklySheetOpen(true); trackEvent('weekly_summary_open') }}
+              style={{
+                width: '100%', padding: '14px 16px', borderRadius: 'var(--radius-md)',
+                background: 'var(--sage-soft)', border: '1px solid var(--border)',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              }}
+            >
+              <span style={{ fontSize: 16, lineHeight: '22px', fontWeight: 500, color: 'var(--ink)' }}>
+                Weekly Summary
+              </span>
+              <svg width={16} height={16} viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M6 4l4 4-4 4" stroke="var(--ink-soft)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
+
           {/* Calendar Section */}
           <div style={{ margin: '24px 16px 0' }}>
             <h2 style={{
@@ -430,12 +465,11 @@ export default function Progress() {
       )}
 
       {/* Weekly Summary Sheet */}
-      <Sheet open={weeklySheetOpen} onClose={() => setWeeklySheetOpen(false)} ariaLabelledBy="weekly-heading">
+      <Sheet open={weeklySheetOpen} onClose={() => { setWeeklySheetOpen(false); trackEvent('weekly_summary_close') }} ariaLabelledBy="weekly-heading">
         <WeeklySummaryContent
-          entries={entries}
-          weightUnit={weightUnit}
+          meals={meals}
           mood={weeklyMood}
-          onMoodChange={setWeeklyMood}
+          onMoodChange={(i) => { setWeeklyMood(i); trackEvent('mood_selected', { value: i }) }}
         />
       </Sheet>
 
@@ -448,6 +482,7 @@ export default function Progress() {
           goalWeight={milestoneOverlay.goalWeight}
           unit={weightUnit}
           onClose={() => setMilestoneOverlay(null)}
+          onShare={() => trackEvent('milestone_share', { variant: milestoneOverlay.variant })}
         />
       )}
     </div>
@@ -455,11 +490,11 @@ export default function Progress() {
 }
 
 function WeeklySummaryContent({
+  meals,
   mood,
   onMoodChange,
 }: {
-  entries: ProgressEntry[]
-  weightUnit: WeightUnit
+  meals: MealEntry[]
   mood: number | null
   onMoodChange: (i: number) => void
 }) {
@@ -467,8 +502,47 @@ function WeeklySummaryContent({
   const weekStart = new Date(now)
   const day = weekStart.getDay()
   weekStart.setDate(weekStart.getDate() - (day === 0 ? 6 : day - 1))
+  weekStart.setHours(0, 0, 0, 0)
 
   const weekLabel = weekStart.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })
+
+  const weekMeals = meals.filter(m => new Date(m.logged_at) >= weekStart)
+  const mealsLogged = weekMeals.length
+  const mealsTarget = 14
+
+  // Avg daily calories: group by date, compute per-day totals, average them
+  const caloriesByDay = new Map<string, number>()
+  for (const m of weekMeals) {
+    const dateKey = new Date(m.logged_at).toISOString().split('T')[0]
+    caloriesByDay.set(dateKey, (caloriesByDay.get(dateKey) || 0) + (m.calories || 0))
+  }
+  const daysWithData = caloriesByDay.size
+  const avgCalories = daysWithData >= 2
+    ? Math.round([...caloriesByDay.values()].reduce((a, b) => a + b, 0) / daysWithData)
+    : null
+
+  // Best/worst day: day with most/fewest meals logged (assumption documented per manager guidance)
+  const mealCountByDay = new Map<string, number>()
+  for (const m of weekMeals) {
+    const dateKey = new Date(m.logged_at).toISOString().split('T')[0]
+    mealCountByDay.set(dateKey, (mealCountByDay.get(dateKey) || 0) + 1)
+  }
+
+  let bestDay: string | null = null
+  let worstDay: string | null = null
+  if (mealCountByDay.size >= 2) {
+    let bestCount = -1
+    let worstCount = Infinity
+    for (const [dateKey, count] of mealCountByDay) {
+      if (count > bestCount) { bestCount = count; bestDay = dateKey }
+      if (count < worstCount) { worstCount = count; worstDay = dateKey }
+    }
+  }
+
+  const formatDayLabel = (dateStr: string) => {
+    const d = new Date(dateStr + 'T12:00:00')
+    return d.toLocaleDateString('en-US', { weekday: 'short' })
+  }
 
   return (
     <div style={{ textAlign: 'center' }}>
@@ -476,10 +550,9 @@ function WeeklySummaryContent({
         Week of {weekLabel}
       </h2>
 
-      {/* Meals logged hero stat - placeholder */}
-      <p aria-label="0 of 14 meals logged this week">
-        <span style={{ fontSize: 48, lineHeight: '56px', fontWeight: 700, color: 'var(--teal-primary)' }}>0</span>
-        <span style={{ fontSize: 20, lineHeight: '24px', color: 'var(--ink-soft)' }}>/14</span>
+      <p aria-label={`${mealsLogged} of ${mealsTarget} meals logged this week`}>
+        <span style={{ fontSize: 48, lineHeight: '56px', fontWeight: 700, color: 'var(--teal-primary)' }}>{mealsLogged}</span>
+        <span style={{ fontSize: 20, lineHeight: '24px', color: 'var(--ink-soft)' }}>/{mealsTarget}</span>
       </p>
       <p aria-hidden="true" style={{ fontSize: 14, lineHeight: '20px', color: 'var(--ink-soft)', marginTop: 4 }}>
         Meals logged this week
@@ -487,12 +560,11 @@ function WeeklySummaryContent({
 
       <hr aria-hidden="true" style={{ border: 'none', borderTop: '1px solid var(--border)', margin: '24px 0' }} />
 
-      {/* Avg daily calories - placeholder */}
-      <p aria-label="Average daily calories: —" style={{ fontSize: 32, lineHeight: '38px', fontWeight: 700, color: 'var(--ink)' }}>
-        —
+      <p aria-label={`Average daily calories: ${avgCalories ?? '—'}`} style={{ fontSize: 32, lineHeight: '38px', fontWeight: 700, color: 'var(--ink)' }}>
+        {avgCalories !== null ? avgCalories.toLocaleString() : '—'}
       </p>
       <p style={{ fontSize: 14, lineHeight: '20px', color: 'var(--ink-soft)', marginTop: 4 }}>
-        Not enough days logged for an average
+        {avgCalories !== null ? 'Avg daily calories' : 'Not enough days logged for an average'}
       </p>
 
       {/* Best/Worst Day */}
@@ -504,8 +576,12 @@ function WeeklySummaryContent({
             fontSize: 12, lineHeight: '16px', fontWeight: 600, color: 'var(--ink-soft)',
             textTransform: 'uppercase', letterSpacing: '0.12em',
           }}>Best Day</p>
-          <p style={{ fontSize: 18, lineHeight: '22px', fontWeight: 600, color: 'var(--ink)', marginTop: 4 }}>—</p>
-          <p style={{ fontSize: 14, lineHeight: '20px', color: 'var(--ink-soft)', marginTop: 2 }}>Not enough data this week</p>
+          <p style={{ fontSize: 18, lineHeight: '22px', fontWeight: 600, color: 'var(--ink)', marginTop: 4 }}>
+            {bestDay ? formatDayLabel(bestDay) : '—'}
+          </p>
+          <p style={{ fontSize: 14, lineHeight: '20px', color: 'var(--ink-soft)', marginTop: 2 }}>
+            {bestDay ? `${mealCountByDay.get(bestDay)} meals logged` : 'Not enough data this week'}
+          </p>
         </div>
         <div role="group" aria-labelledby="worst-label" style={{
           background: 'var(--coral-10)', borderRadius: 'var(--radius-md)', padding: 12, textAlign: 'left',
@@ -514,8 +590,12 @@ function WeeklySummaryContent({
             fontSize: 12, lineHeight: '16px', fontWeight: 600, color: 'var(--ink-soft)',
             textTransform: 'uppercase', letterSpacing: '0.12em',
           }}>Worst Day</p>
-          <p style={{ fontSize: 18, lineHeight: '22px', fontWeight: 600, color: 'var(--ink)', marginTop: 4 }}>—</p>
-          <p style={{ fontSize: 14, lineHeight: '20px', color: 'var(--ink-soft)', marginTop: 2 }}>Not enough data this week</p>
+          <p style={{ fontSize: 18, lineHeight: '22px', fontWeight: 600, color: 'var(--ink)', marginTop: 4 }}>
+            {worstDay ? formatDayLabel(worstDay) : '—'}
+          </p>
+          <p style={{ fontSize: 14, lineHeight: '20px', color: 'var(--ink-soft)', marginTop: 2 }}>
+            {worstDay ? `${mealCountByDay.get(worstDay)} meals logged` : 'Not enough data this week'}
+          </p>
         </div>
       </div>
 
@@ -546,6 +626,7 @@ function MilestoneCelebrationOverlay({
   goalWeight,
   unit,
   onClose,
+  onShare,
 }: {
   variant: 'five_lb' | 'ten_pct' | 'thirty_day'
   currentWeight: number
@@ -553,7 +634,11 @@ function MilestoneCelebrationOverlay({
   goalWeight: number
   unit: WeightUnit
   onClose: () => void
+  onShare?: () => void
 }) {
+  useEffect(() => {
+    trackEvent('milestone_unlock_view', { variant })
+  }, [variant])
   const unitLabel = unit === 'lbs' ? 'lb' : 'kg'
 
   const variants = {
@@ -682,6 +767,7 @@ function MilestoneCelebrationOverlay({
         <button
           type="button"
           onClick={() => {
+            onShare?.()
             if (navigator.share) {
               navigator.share({ title: v.headline, text: v.subhead })
             }
