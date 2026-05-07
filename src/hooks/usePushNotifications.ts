@@ -58,6 +58,7 @@ export function usePushNotifications(userId: string | undefined) {
           endpoint: sub.endpoint,
           p256dh: subJson.keys?.p256dh ?? '',
           auth: subJson.keys?.auth ?? '',
+          platform: 'web',
           updated_at: new Date().toISOString(),
         },
         { onConflict: 'endpoint' }

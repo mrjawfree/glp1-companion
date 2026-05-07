@@ -33,6 +33,9 @@ export default {
           500: '#B5687A',
         },
         info: '#4A6FA5',
+        card: 'var(--color-card)',
+        muted: 'var(--color-muted)',
+        'accent-warm': 'var(--color-accent-warm)',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

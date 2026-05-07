@@ -4,6 +4,20 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --color-card: #ffffff;
+  --color-muted: #5A6B82;
+  --color-accent-warm: #E8A87C;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-card: #1a1a1a;
+    --color-muted: #5A6B82;
+    --color-accent-warm: #E8A87C;
+  }
+}
+
 body {
   background-color: #FBF8F3;
   color: #0F1A2B;

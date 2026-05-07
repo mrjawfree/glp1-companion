@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { DashboardSkeleton } from '../components/Skeleton'
+import { useNotificationSettings } from '../hooks/useNotificationSettings'
 
 interface DoseEntry {
   id: string
@@ -106,6 +107,7 @@ export default function Dashboard() {
   const [streak, setStreak] = useState(0)
   const [streakDays, setStreakDays] = useState<('logged' | 'partial' | 'missed' | 'today' | 'future')[]>([])
   const [showSetupNudge, setShowSetupNudge] = useState(false)
+  const ns = useNotificationSettings(user?.id)
 
   useEffect(() => {
     if (!user) return
@@ -213,6 +215,18 @@ export default function Dashboard() {
             <span className="block text-body-sm text-slate-500">Set up your medication and goals to get the most out of the app.</span>
           </div>
         </button>
+      )}
+
+      {ns.settings.permission_state !== 'granted' && !ns.loading && (
+        <div className="bg-amber-100 border border-amber-500 rounded-md p-4 mb-5 flex items-center justify-between">
+          <p className="text-body-sm text-amber-500">Reminders are off.</p>
+          <button
+            onClick={() => navigate('/settings/notifications')}
+            className="text-body-sm font-semibold text-amber-500 underline"
+          >
+            Turn on
+          </button>
+        </div>
       )}
 
       <button

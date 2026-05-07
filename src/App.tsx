@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useEffect, lazy, Suspense } from 'react'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { OnboardingProvider } from './hooks/useOnboarding'
+import { useNotificationNav } from './hooks/useNotificationNav'
 
 const Layout = lazy(() => import('./components/Layout'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
@@ -27,6 +28,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (loading) return <div className="flex items-center justify-center h-screen bg-warm-white text-slate-500">Loading...</div>
   if (!user) return <Navigate to="/onboarding" replace />
   return <>{children}</>
+}
+
+function NotificationNavHandler() {
+  useNotificationNav()
+  return null
 }
 
 function OnboardingRouteTracker({ children }: { children: React.ReactNode }) {
@@ -64,6 +70,7 @@ export default function App() {
   return (
     <AuthProvider>
       <OnboardingProvider>
+        <NotificationNavHandler />
         <OnboardingRouteTracker>
           <Suspense fallback={<LoadingFallback />}>
           <Routes>
