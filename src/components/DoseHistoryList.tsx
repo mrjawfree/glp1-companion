@@ -15,6 +15,7 @@ interface UndoState {
 
 export default function DoseHistoryList({ doses, onEdit, onDelete }: DoseHistoryListProps) {
   const [swipedId, setSwipedId] = useState<string | null>(null)
+  const [menuId, setMenuId] = useState<string | null>(null)
   const [undoEntry, setUndoEntry] = useState<UndoState | null>(null)
   const touchStartX = useRef(0)
   const touchCurrentX = useRef(0)
@@ -117,6 +118,17 @@ export default function DoseHistoryList({ doses, onEdit, onDelete }: DoseHistory
                   onTouchEnd={e => handleTouchEnd(dose.id, e.currentTarget as HTMLDivElement)}
                   className="relative bg-white p-4 shadow-elevation-1 z-10"
                   style={{ transform: swipedId === dose.id ? 'translateX(-140px)' : 'translateX(0)' }}
+                  tabIndex={0}
+                  role="group"
+                  aria-label={`${dose.is_skip ? 'Skipped' : (MEDICATION_INFO[dose.medication as Medication]?.brand ?? dose.medication)} — ${new Date(dose.logged_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      setMenuId(menuId === dose.id ? null : dose.id)
+                    } else if (e.key === 'Escape') {
+                      setMenuId(null)
+                    }
+                  }}
                 >
                   <div className="flex justify-between items-start">
                     <div>
@@ -136,13 +148,26 @@ export default function DoseHistoryList({ doses, onEdit, onDelete }: DoseHistory
                         <p className="text-body-sm text-slate-500 capitalize">{dose.skip_reason.replace('_', ' ')}</p>
                       )}
                     </div>
-                    <div className="text-right">
-                      <p className="text-body-sm text-slate-400">
-                        {new Date(dose.logged_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                      </p>
-                      {dose.injection_site && (
-                        <p className="text-body-sm text-slate-400 capitalize">{dose.injection_site.replace(/_/g, ' ')}</p>
-                      )}
+                    <div className="flex items-start gap-2">
+                      <div className="text-right">
+                        <p className="text-body-sm text-slate-400">
+                          {new Date(dose.logged_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </p>
+                        {dose.injection_site && (
+                          <p className="text-body-sm text-slate-400 capitalize">{dose.injection_site.replace(/_/g, ' ')}</p>
+                        )}
+                      </div>
+                      {/* Kebab menu for keyboard/desktop users */}
+                      <button
+                        onClick={e => { e.stopPropagation(); setMenuId(menuId === dose.id ? null : dose.id) }}
+                        className="p-1 -mr-1 text-slate-400 hover:text-slate-600 hidden sm:block"
+                        aria-label="Dose actions"
+                        aria-expanded={menuId === dose.id}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                          <circle cx="8" cy="3" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="8" cy="13" r="1.5"/>
+                        </svg>
+                      </button>
                     </div>
                   </div>
                   {dose.side_effects && dose.side_effects.length > 0 && (
@@ -157,6 +182,23 @@ export default function DoseHistoryList({ doses, onEdit, onDelete }: DoseHistory
                   )}
                   {!dose.synced_at && (
                     <span className="inline-block mt-1 text-body-sm text-slate-400 italic">Pending sync</span>
+                  )}
+                  {/* Keyboard-accessible action menu */}
+                  {menuId === dose.id && (
+                    <div className="mt-2 flex gap-2 pt-2 border-t border-slate-100 animate-slideUp motion-reduce:animate-none">
+                      <button
+                        onClick={() => { setMenuId(null); onEdit(dose) }}
+                        className="flex-1 py-2 rounded-md bg-slate-100 text-slate-700 text-label hover:bg-slate-200 transition-colors"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => { setMenuId(null); handleDelete(dose) }}
+                        className="flex-1 py-2 rounded-md bg-red-50 text-red-600 text-label hover:bg-red-100 transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
