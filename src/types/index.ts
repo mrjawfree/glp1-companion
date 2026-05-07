@@ -11,6 +11,59 @@ export type Goal = 'weight_loss' | 'blood_sugar' | 'reduce_side_effects' | 'sust
 export type TrackingPreference = 'weight' | 'doses' | 'meals' | 'side_effects'
 export type FirstActionChoice = 'log_injection' | 'meal_plan'
 
+export type InjectionSiteZone =
+  | 'left_abdomen' | 'right_abdomen'
+  | 'left_thigh' | 'right_thigh'
+  | 'left_upper_arm' | 'right_upper_arm'
+
+export type SkipReason = 'side_effects' | 'prescriber_direction' | 'travel_schedule' | 'supply_issue' | 'other'
+
+export type DaysDeltaState = 'upcoming' | 'tomorrow' | 'today' | 'overdue' | 'severe-overdue' | 'empty'
+
+export interface DoseLogEntry {
+  id: string
+  user_id: string
+  medication: Medication
+  dose_amount: string
+  logged_at: string
+  injection_site: InjectionSiteZone | null
+  side_effects: string[] | null
+  notes: string | null
+  is_skip: boolean
+  skip_reason: SkipReason | null
+  synced_at: string | null
+  deleted_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export const INJECTION_SITE_ZONES: { value: InjectionSiteZone; label: string }[] = [
+  { value: 'left_upper_arm', label: 'Left upper arm' },
+  { value: 'right_upper_arm', label: 'Right upper arm' },
+  { value: 'left_abdomen', label: 'Left abdomen' },
+  { value: 'right_abdomen', label: 'Right abdomen' },
+  { value: 'left_thigh', label: 'Left thigh' },
+  { value: 'right_thigh', label: 'Right thigh' },
+]
+
+export const SITE_ROTATION_ORDER: InjectionSiteZone[] = [
+  'right_abdomen', 'left_abdomen', 'right_thigh', 'left_thigh', 'right_upper_arm', 'left_upper_arm',
+]
+
+export const SKIP_REASONS: { value: SkipReason; label: string }[] = [
+  { value: 'side_effects', label: 'Side effects' },
+  { value: 'prescriber_direction', label: 'Prescriber direction' },
+  { value: 'travel_schedule', label: 'Travel / schedule' },
+  { value: 'supply_issue', label: 'Supply issue' },
+  { value: 'other', label: 'Other' },
+]
+
+export const DOSE_AMOUNTS: Record<'ozempic' | 'wegovy' | 'mounjaro', string[]> = {
+  ozempic: ['0.25', '0.5', '1', '1.5', '2'],
+  wegovy: ['0.25', '0.5', '1', '1.7', '2.4'],
+  mounjaro: ['2.5', '5', '7.5', '10', '12.5', '15'],
+}
+
 export interface OnboardingData {
   displayName: string
   medication: Medication | null
