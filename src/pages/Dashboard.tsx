@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { DashboardSkeleton } from '../components/Skeleton'
+import NextDoseWidget from '../components/NextDoseWidget'
+import type { DaysDeltaState } from '../types'
+import { MEDICATION_INFO, type Medication } from '../types'
 
 interface DoseEntry {
   id: string
@@ -173,23 +176,26 @@ export default function Dashboard() {
 
   const displayName = profile?.display_name || user?.email?.split('@')[0] || 'there'
 
-  const getDoseStatus = () => {
-    if (!profile?.medication || profile.medication === 'other') {
-      return { status: 'none' as const, label: 'Set up your dose schedule to get tracking' }
+  const getDoseWidgetState = (): { state: DaysDeltaState; nextDoseDate: string | null; daysSinceLastDose: number | null } => {
+    if (!profile?.medication || profile.medication === 'other' || !lastDose) {
+      return { state: 'empty', nextDoseDate: null, daysSinceLastDose: null }
     }
-    if (!lastDose) return { status: 'none' as const, label: 'No doses logged yet — tap to log your first' }
     const doseDate = new Date(lastDose.logged_at)
     const now = new Date()
-    const hoursSince = (now.getTime() - doseDate.getTime()) / (1000 * 60 * 60)
-    if (hoursSince < 24) return {
-      status: 'logged' as const,
-      label: `Dose logged ${doseDate.toLocaleDateString('en-US', { weekday: 'long' })} ${doseDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`
-    }
-    if (hoursSince > 180) return { status: 'overdue' as const, label: 'Your dose was scheduled recently. Log it when you\'re ready.' }
-    return { status: 'due' as const, label: 'Dose due soon' }
+    const daysSince = Math.floor((now.getTime() - doseDate.getTime()) / (1000 * 60 * 60 * 24))
+    const cadence = MEDICATION_INFO[profile.medication as Medication]?.cadence ?? 'weekly'
+    const intervalDays = cadence === 'daily' ? 1 : 7
+    const nextDose = new Date(doseDate.getTime() + intervalDays * 24 * 60 * 60 * 1000)
+    const daysUntilNext = Math.ceil((nextDose.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+
+    if (daysUntilNext > 1) return { state: 'upcoming', nextDoseDate: nextDose.toISOString(), daysSinceLastDose: daysSince }
+    if (daysUntilNext === 1) return { state: 'tomorrow', nextDoseDate: nextDose.toISOString(), daysSinceLastDose: daysSince }
+    if (daysUntilNext === 0 || daysSince === intervalDays) return { state: 'today', nextDoseDate: nextDose.toISOString(), daysSinceLastDose: daysSince }
+    if (daysSince > intervalDays && daysSince <= intervalDays + 3) return { state: 'overdue', nextDoseDate: null, daysSinceLastDose: daysSince }
+    return { state: 'severe-overdue', nextDoseDate: null, daysSinceLastDose: daysSince }
   }
 
-  const doseStatus = getDoseStatus()
+  const widgetState = getDoseWidgetState()
 
   return (
     <div className="px-4 pt-5">
@@ -215,34 +221,12 @@ export default function Dashboard() {
         </button>
       )}
 
-      <button
-        onClick={() => navigate(doseStatus.status === 'logged' ? '/doses' : '/doses?log=true')}
-        className={`w-full rounded-md p-5 mb-5 text-left transition-colors ${
-          doseStatus.status === 'logged' ? 'bg-green-100 border border-green-400' :
-          doseStatus.status === 'overdue' ? 'bg-amber-100 border border-amber-500' :
-          doseStatus.status === 'due' ? 'bg-slate-100 border border-slate-300' :
-          'bg-white border-2 border-dashed border-slate-300'
-        }`}
-      >
-        <div className="flex items-center gap-3">
-          {doseStatus.status === 'logged' && (
-            <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center" aria-hidden="true">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8L7 12L13 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </div>
-          )}
-          {doseStatus.status === 'overdue' && (
-            <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center" aria-hidden="true">
-              <span className="text-white font-semibold text-body-sm">!</span>
-            </div>
-          )}
-          <div>
-            <p className={`text-body-lg font-semibold ${doseStatus.status === 'overdue' ? 'text-amber-500' : 'text-slate-900'}`}>
-              {doseStatus.status === 'due' ? 'Log dose' : doseStatus.status === 'none' ? 'Add your medication' : 'Dose status'}
-            </p>
-            <p className="text-body-sm text-slate-500">{doseStatus.label}</p>
-          </div>
-        </div>
-      </button>
+      <NextDoseWidget
+        state={widgetState.state}
+        nextDoseDate={widgetState.nextDoseDate}
+        daysSinceLastDose={widgetState.daysSinceLastDose}
+        onLogDose={() => {}}
+      />
 
       <div className="bg-white rounded-md shadow-elevation-1 p-5 mb-5 flex justify-center">
         <NutritionRing protein={todayProtein} fiber={todayFiber} hydration={hydration} proteinGoal={90} fiberGoal={25} />
