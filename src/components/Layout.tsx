@@ -7,6 +7,8 @@ function TabIcon({ name, active }: { name: string; active: boolean }) {
   switch (name) {
     case 'home':
       return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12L12 3L21 12V21H15V15H9V21H3V12Z" stroke={color} strokeWidth="1.5" fill={active ? color : 'none'} strokeLinejoin="round"/></svg>
+    case 'nutrition':
+      return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke={color} strokeWidth="1.5"/><circle cx="12" cy="12" r="5" stroke={color} strokeWidth="1.5" strokeDasharray="4 3"/></svg>
     case 'meals':
       return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke={color} strokeWidth="1.5"/><path d="M8 9C8 9 10 13 12 13C14 13 16 9 16 9" stroke={color} strokeWidth="1.5" strokeLinecap="round"/></svg>
     case 'progress':
@@ -27,6 +29,7 @@ export default function Layout() {
     { label: 'Log dose', path: '/doses' },
     { label: 'Log weight', path: '/progress' },
     { label: 'Log feeling', path: '/doses?checkin=true' },
+    { label: 'Meal plans', path: '/meals' },
   ]
 
   return (
@@ -64,8 +67,8 @@ export default function Layout() {
           <NavLink to="/" end className={({ isActive }) => `flex flex-col items-center gap-1 ${isActive ? 'text-slate-700' : 'text-slate-400'}`}>
             {({ isActive }) => <><TabIcon name="home" active={isActive} /><span className="text-[11px] font-medium">Home</span></>}
           </NavLink>
-          <NavLink to="/meals" className={({ isActive }) => `flex flex-col items-center gap-1 ${isActive ? 'text-slate-700' : 'text-slate-400'}`}>
-            {({ isActive }) => <><TabIcon name="meals" active={isActive} /><span className="text-[11px] font-medium">Meals</span></>}
+          <NavLink to="/nutrition" className={({ isActive }) => `flex flex-col items-center gap-1 ${isActive ? 'text-slate-700' : 'text-slate-400'}`}>
+            {({ isActive }) => <><TabIcon name="nutrition" active={isActive} /><span className="text-[11px] font-medium">Nutrition</span></>}
           </NavLink>
 
           <button

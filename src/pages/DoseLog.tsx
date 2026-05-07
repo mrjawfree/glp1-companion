@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { Medication, MEDICATION_INFO } from '../types'
@@ -46,6 +46,7 @@ function getSuggestedSite(lastSite: string | null): InjectionSite {
 
 export default function DoseLog() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [loading, setLoading] = useState(true)
   const [doses, setDoses] = useState<DoseEntry[]>([])
@@ -132,6 +133,19 @@ export default function DoseLog() {
       notes: notes || null,
     })
     if (!error) {
+      if (doses.length === 0) {
+        const { data: goalsData } = await supabase
+          .from('nutrition_goals')
+          .select('user_id')
+          .eq('user_id', user!.id)
+          .single()
+        if (!goalsData) {
+          loadDoses()
+          setSaving(false)
+          navigate('/settings/nutrition-goals?onboarding=1')
+          return
+        }
+      }
       setView('checkin')
       loadDoses()
     }
