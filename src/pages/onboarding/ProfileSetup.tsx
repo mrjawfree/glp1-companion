@@ -2,16 +2,35 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import OnboardingShell from '../../components/OnboardingShell'
 import DayPicker from '../../components/DayPicker'
-import { Medication, MEDICATION_INFO } from '../../types'
+import NumericStepper from '../../components/NumericStepper'
+import SegmentedControl from '../../components/SegmentedControl'
+import { Medication, MEDICATION_INFO, WeightUnit, DoseUnit } from '../../types'
 import { useOnboarding } from '../../hooks/useOnboarding'
 
 const MEDICATIONS: Medication[] = ['ozempic', 'wegovy', 'mounjaro', 'zepbound', 'saxenda', 'other']
+
+const WEIGHT_UNITS: { value: WeightUnit; label: string }[] = [
+  { value: 'lb', label: 'lb' },
+  { value: 'kg', label: 'kg' },
+]
+
+const DOSE_UNITS: { value: DoseUnit; label: string }[] = [
+  { value: 'mg', label: 'mg' },
+  { value: 'mL', label: 'mL' },
+  { value: 'units', label: 'units' },
+]
+
+function getDefaultDose(med: Medication | null): number {
+  if (med === 'mounjaro' || med === 'zepbound') return 2.5
+  return 0.25
+}
 
 export default function ProfileSetup() {
   const navigate = useNavigate()
   const { data, update } = useOnboarding()
   const [otherError, setOtherError] = useState('')
   const [nameError, setNameError] = useState('')
+  const [weightWarning, setWeightWarning] = useState('')
   const otherInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -25,7 +44,11 @@ export default function ProfileSetup() {
     if (med === 'other') {
       update({ medication: 'other' })
     } else {
-      update({ medication: med, medicationOther: null })
+      update({
+        medication: med,
+        medicationOther: null,
+        doseAmount: data.doseAmount ?? getDefaultDose(med),
+      })
     }
   }
 
@@ -45,8 +68,13 @@ export default function ProfileSetup() {
       update({ medicationOther: trimmed })
     }
 
+    if (data.goalWeight !== null && data.currentWeight !== null && data.goalWeight >= data.currentWeight && !weightWarning) {
+      setWeightWarning("Your goal is higher than your current weight — is that right?")
+      return
+    }
+
     update({ displayName: trimmedName })
-    navigate('/onboarding/goals')
+    navigate('/onboarding/notifications')
   }
 
   const canContinue = data.displayName.trim().length > 0 &&
@@ -60,8 +88,8 @@ export default function ProfileSetup() {
       totalSteps={4}
       onBack={() => navigate('/onboarding')}
       onSkip={() => {
-        update({ medication: null, medicationOther: null, injectionDays: [] })
-        navigate('/onboarding/goals')
+        update({ medication: null, medicationOther: null, injectionDays: [], currentWeight: null, goalWeight: null })
+        navigate('/onboarding/notifications')
       }}
     >
       <h1 className="text-display-lg text-slate-900 mb-2">Tell us about yourself</h1>
@@ -139,6 +167,28 @@ export default function ProfileSetup() {
       )}
 
       <div className="mb-5">
+        <label className="text-label text-slate-500 uppercase mb-2 block">Dose</label>
+        <div className="flex items-end gap-3">
+          <div className="flex-1">
+            <NumericStepper
+              value={data.doseAmount ?? getDefaultDose(data.medication)}
+              onChange={(val) => update({ doseAmount: val })}
+              min={0.25}
+              max={20}
+              step={0.25}
+            />
+          </div>
+          <div className="flex-1">
+            <SegmentedControl
+              options={DOSE_UNITS}
+              selected={data.doseUnit}
+              onChange={(unit) => update({ doseUnit: unit })}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-5">
         <label className="text-label text-slate-500 uppercase mb-2 block">Injection day(s)</label>
         <DayPicker
           selected={data.injectionDays}
@@ -150,6 +200,54 @@ export default function ProfileSetup() {
             <p className="text-body-sm text-amber-500">
               That's a lot — double-check with your provider.
             </p>
+          </div>
+        )}
+      </div>
+
+      <div className="mb-5">
+        <label className="text-label text-slate-500 uppercase mb-2 block">Weight goal</label>
+        <div className="mb-3">
+          <SegmentedControl
+            options={WEIGHT_UNITS}
+            selected={data.weightUnit}
+            onChange={(unit) => update({ weightUnit: unit })}
+          />
+        </div>
+        <div className="flex gap-3">
+          <div className="flex-1">
+            <label htmlFor="current-weight" className="text-body-sm text-slate-400 mb-1 block">Current</label>
+            <input
+              id="current-weight"
+              type="number"
+              inputMode="decimal"
+              value={data.currentWeight ?? ''}
+              onChange={(e) => {
+                setWeightWarning('')
+                update({ currentWeight: e.target.value ? parseFloat(e.target.value) : null })
+              }}
+              placeholder={data.weightUnit === 'lb' ? '180' : '82'}
+              className="w-full border-2 border-slate-200 rounded-md px-4 py-3 text-body-lg bg-white focus:border-slate-700 focus:outline-none transition-colors"
+            />
+          </div>
+          <div className="flex-1">
+            <label htmlFor="goal-weight" className="text-body-sm text-slate-400 mb-1 block">Goal</label>
+            <input
+              id="goal-weight"
+              type="number"
+              inputMode="decimal"
+              value={data.goalWeight ?? ''}
+              onChange={(e) => {
+                setWeightWarning('')
+                update({ goalWeight: e.target.value ? parseFloat(e.target.value) : null })
+              }}
+              placeholder={data.weightUnit === 'lb' ? '160' : '72'}
+              className="w-full border-2 border-slate-200 rounded-md px-4 py-3 text-body-lg bg-white focus:border-slate-700 focus:outline-none transition-colors"
+            />
+          </div>
+        </div>
+        {weightWarning && (
+          <div className="bg-amber-100 border border-amber-500 rounded-md p-3 mt-2">
+            <p className="text-body-sm text-amber-500">{weightWarning}</p>
           </div>
         )}
       </div>
