@@ -19,6 +19,7 @@ export default function MacroGoalSetup() {
   const [suggestions, setSuggestions] = useState<SuggestOutput>({ calories: null, proteinG: null, waterMl: null })
   const [suggestOpen, setSuggestOpen] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const [profileMissing, setProfileMissing] = useState(false)
 
   useEffect(() => {
@@ -34,7 +35,7 @@ export default function MacroGoalSetup() {
     async function loadProfile() {
       const { data: settings } = await supabase
         .from('user_settings')
-        .select('current_weight, dose_amount')
+        .select('current_weight, weight_unit, dose_amount')
         .eq('user_id', user!.id)
         .single()
 
@@ -43,7 +44,9 @@ export default function MacroGoalSetup() {
         return
       }
 
-      const weightKg = settings.current_weight
+      const weightKg = settings.weight_unit === 'kg'
+        ? settings.current_weight
+        : settings.current_weight * 0.453592
       const result = suggestGoals({
         weightKg,
         heightCm: null,
@@ -73,17 +76,22 @@ export default function MacroGoalSetup() {
   async function handleSave() {
     if (!allValid || !calories || !proteinG || !waterMl) return
     setSaving(true)
+    setSaveError(null)
     const source = goals ? 'manual' : (
       calories === suggestions.calories && proteinG === suggestions.proteinG && waterMl === suggestions.waterMl
         ? 'suggested' : 'mixed'
     )
-    await upsert({
+    const error = await upsert({
       calorie_goal: calories,
       protein_goal_g: proteinG,
       water_goal_ml: waterMl,
       source,
     })
     setSaving(false)
+    if (error) {
+      setSaveError('Failed to save goals. Please try again.')
+      return
+    }
     if (isOnboarding) {
       navigate('/', { replace: true })
     } else {
@@ -233,6 +241,10 @@ export default function MacroGoalSetup() {
             Add your weight in <a href="/settings" className="text-info underline">profile settings</a> to get personalized suggestions.
           </p>
         </div>
+      )}
+
+      {saveError && (
+        <p className="mt-4 text-body-sm text-rose-500 text-center">{saveError}</p>
       )}
 
       <div className="mt-8 space-y-3">

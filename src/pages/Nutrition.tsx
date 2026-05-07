@@ -8,7 +8,7 @@ import WeeklyMacroTrendChart from '../components/WeeklyMacroTrendChart'
 
 export default function Nutrition() {
   const navigate = useNavigate()
-  const today = new Date().toISOString().split('T')[0]
+  const today = new Date().toLocaleDateString('en-CA')
   const { goals, loading: goalsLoading } = useNutritionGoals()
   const { totals, loading: totalsLoading, error, reload } = useDailyTotals(today)
   const { days } = useWeeklyTotals(today)

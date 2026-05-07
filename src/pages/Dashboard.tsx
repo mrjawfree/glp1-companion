@@ -58,7 +58,7 @@ function StreakRow({ streak, days }: { streak: number; days: ('logged' | 'partia
 export default function Dashboard() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const todayStr = new Date().toISOString().split('T')[0]
+  const todayStr = new Date().toLocaleDateString('en-CA')
   const { goals, loading: goalsLoading } = useNutritionGoals()
   const { totals, loading: totalsLoading, error: totalsError, reload: reloadTotals } = useDailyTotals(todayStr)
   const { logWater } = useWaterLog()
