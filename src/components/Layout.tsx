@@ -1,6 +1,7 @@
 import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import InjectionDayBanner from './InjectionDayBanner'
+import { useNotificationClickRouter } from '../hooks/useNotificationClickRouter'
 
 function TabIcon({ name, active }: { name: string; active: boolean }) {
   const color = active ? '#2C3E55' : '#8995A8'
@@ -21,6 +22,7 @@ function TabIcon({ name, active }: { name: string; active: boolean }) {
 export default function Layout() {
   const [fabOpen, setFabOpen] = useState(false)
   const navigate = useNavigate()
+  useNotificationClickRouter()
 
   const fabActions = [
     { label: 'Log food', path: '/food' },

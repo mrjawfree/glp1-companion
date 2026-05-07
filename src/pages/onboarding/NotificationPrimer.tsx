@@ -76,6 +76,12 @@ export default function NotificationPrimer() {
             <p className="text-body-sm text-green-700">
               You're all set — we'll keep things light and helpful.
             </p>
+            <button
+              onClick={(e) => { e.stopPropagation(); navigate('/settings/notifications') }}
+              className="text-body-sm text-green-700 font-medium underline mt-1"
+            >
+              View what you'll get →
+            </button>
           </div>
         )}
 

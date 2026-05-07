@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { usePushNotifications } from '../hooks/usePushNotifications'
 import { supabase } from '../lib/supabase'
 import { DashboardSkeleton } from '../components/Skeleton'
 
@@ -96,6 +97,7 @@ function StreakRow({ streak, days }: { streak: number; days: ('logged' | 'partia
 export default function Dashboard() {
   const { user } = useAuth()
   const navigate = useNavigate()
+  const push = usePushNotifications(user?.id)
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [lastDose, setLastDose] = useState<DoseEntry | null>(null)
@@ -212,6 +214,26 @@ export default function Dashboard() {
             <span className="block text-body-lg font-semibold text-slate-900">Complete your setup</span>
             <span className="block text-body-sm text-slate-500">Set up your medication and goals to get the most out of the app.</span>
           </div>
+        </button>
+      )}
+
+      {push.permissionState !== 'granted' && !showSetupNudge && (
+        <button
+          onClick={() => push.permissionState === 'denied' ? navigate('/settings/notifications') : push.subscribe()}
+          className={`w-full rounded-md p-4 mb-5 text-left ${
+            push.permissionState === 'denied'
+              ? 'bg-slate-100 border border-slate-300'
+              : 'bg-amber-50 border border-amber-200'
+          }`}
+        >
+          <p className={`text-body-md font-medium ${push.permissionState === 'denied' ? 'text-slate-700' : 'text-amber-700'}`}>
+            {push.permissionState === 'denied' ? 'Notifications are blocked' : 'Reminders are off'}
+          </p>
+          <p className={`text-body-sm ${push.permissionState === 'denied' ? 'text-slate-500' : 'text-amber-600'}`}>
+            {push.permissionState === 'denied'
+              ? 'Update your browser settings to receive dose reminders.'
+              : 'Turn on reminders to stay on track with doses and meals.'}
+          </p>
         </button>
       )}
 
