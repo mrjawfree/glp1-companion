@@ -16,6 +16,8 @@ const ProfileSetup = lazy(() => import('./pages/onboarding/ProfileSetup'))
 const NotificationPrimer = lazy(() => import('./pages/onboarding/NotificationPrimer'))
 const FirstMealEntry = lazy(() => import('./pages/onboarding/FirstMealEntry'))
 const Success = lazy(() => import('./pages/onboarding/Success'))
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'))
+const TermsOfService = lazy(() => import('./pages/TermsOfService'))
 
 const ONBOARDING_ROUTE_KEY = 'glp1_onboarding_route'
 
@@ -70,6 +72,8 @@ export default function App() {
             <Route path="/onboarding/first-meal" element={<FirstMealEntry />} />
             <Route path="/onboarding/success" element={<Success />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
             <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
               <Route index element={<Dashboard />} />
               <Route path="doses" element={<DoseLog />} />

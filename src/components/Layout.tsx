@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import InjectionDayBanner from './InjectionDayBanner'
 
@@ -34,6 +34,11 @@ export default function Layout() {
       <InjectionDayBanner />
       <div className="max-w-lg mx-auto pb-20">
         <Outlet />
+        <footer className="mt-12 pb-4 text-center text-xs text-slate-400 space-x-3">
+          <Link to="/privacy" className="hover:text-slate-600">Privacy Policy</Link>
+          <span>·</span>
+          <Link to="/terms" className="hover:text-slate-600">Terms of Service</Link>
+        </footer>
       </div>
 
       {fabOpen && (
