@@ -4,7 +4,7 @@ import { trackEvent } from '../analytics'
 describe('trackEvent', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
-    delete (window as Record<string, unknown>).plausible
+    delete (window as unknown as Record<string, unknown>).plausible
   })
 
   it('does not log to console in non-dev mode', () => {
@@ -15,7 +15,7 @@ describe('trackEvent', () => {
 
   it('calls window.plausible when available', () => {
     const plausible = vi.fn()
-    ;(window as Record<string, unknown>).plausible = plausible
+    ;(window as unknown as Record<string, unknown>).plausible = plausible
     trackEvent('milestone_unlock_view', { variant: 'five_lb' })
     expect(plausible).toHaveBeenCalledWith('milestone_unlock_view', { props: { variant: 'five_lb' } })
   })

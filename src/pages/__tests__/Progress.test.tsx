@@ -4,7 +4,6 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import Progress from '../Progress'
 
-const mockSelect = vi.fn()
 const mockFrom = vi.fn()
 
 vi.mock('../../lib/supabase', () => ({
