@@ -454,7 +454,7 @@ export default function Settings() {
               {push.subscription ? 'Push notifications enabled' : 'Not configured'}
             </p>
           </div>
-          <button onClick={() => setShowNotifSettings(true)}
+          <button onClick={() => navigate('/settings/notifications')}
             className="px-4 py-2 bg-slate-100 text-slate-700 text-label rounded-md hover:bg-slate-200 transition-colors">
             {push.subscription ? 'Manage' : 'Set up'}
           </button>
