@@ -10,6 +10,7 @@ const MealPlans = lazy(() => import('./pages/MealPlans'))
 const FoodLog = lazy(() => import('./pages/FoodLog'))
 const Progress = lazy(() => import('./pages/Progress'))
 const Settings = lazy(() => import('./pages/Settings'))
+const NotificationSettings = lazy(() => import('./pages/NotificationSettings'))
 const Login = lazy(() => import('./pages/Login'))
 const Welcome = lazy(() => import('./pages/onboarding/Welcome'))
 const ProfileSetup = lazy(() => import('./pages/onboarding/ProfileSetup'))
@@ -81,6 +82,7 @@ export default function App() {
               <Route path="food" element={<FoodLog />} />
               <Route path="progress" element={<Progress />} />
               <Route path="settings" element={<Settings />} />
+              <Route path="settings/notifications" element={<NotificationSettings />} />
             </Route>
           </Routes>
           </Suspense>

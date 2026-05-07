@@ -30,7 +30,6 @@ export default function Settings() {
   const [settings, setSettings] = useState<UserSettings | null>(null)
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
-  const [showNotifSettings, setShowNotifSettings] = useState(false)
   const [plan, setPlan] = useState<'monthly' | 'annual'>('annual')
   const [saving, setSaving] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -43,8 +42,6 @@ export default function Settings() {
   const [notifEnabled, setNotifEnabled] = useState(false)
   const [goalWeight, setGoalWeight] = useState('')
 
-  const [reminderTime, setReminderTime] = useState('08:00')
-  const [weeklyCheckin, setWeeklyCheckin] = useState(true)
 
   useEffect(() => {
     if (user) {
@@ -92,17 +89,6 @@ export default function Settings() {
     await loadSettings()
     setSaving(false)
     setShowSettings(false)
-  }
-
-  const handleToggleNotifications = async () => {
-    if (push.subscription) {
-      await push.unsubscribe()
-      setNotifEnabled(false)
-    } else {
-      const success = await push.subscribe()
-      if (success) setNotifEnabled(true)
-    }
-    await loadSettings()
   }
 
   const handleSignOut = async () => {
@@ -279,116 +265,6 @@ export default function Settings() {
     )
   }
 
-  if (showNotifSettings) {
-    return (
-      <div className="px-4 pt-5">
-        <button onClick={() => setShowNotifSettings(false)} className="flex items-center gap-2 text-slate-500 mb-6" aria-label="Back to profile">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          Back
-        </button>
-
-        <h1 className="text-title-lg text-slate-900 mb-2">Notifications</h1>
-        <p className="text-body-md text-slate-500 mb-6">Choose which reminders you'd like to receive.</p>
-
-        <div className="space-y-4">
-          <div className="bg-white rounded-md shadow-elevation-1 p-5">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-body-md font-semibold text-slate-900">Push notifications</span>
-              <button
-                type="button"
-                onClick={handleToggleNotifications}
-                disabled={push.loading}
-                role="switch"
-                aria-checked={!!push.subscription}
-                aria-label="Push notifications"
-                className={`w-12 h-7 rounded-full transition-colors relative ${
-                  push.subscription ? 'bg-green-600' : 'bg-slate-200'
-                } ${push.loading ? 'opacity-40' : ''}`}
-              >
-                <span className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow-elevation-1 transition-transform ${
-                  push.subscription ? 'left-[22px]' : 'left-0.5'
-                }`} aria-hidden="true" />
-              </button>
-            </div>
-            <p className="text-body-sm text-slate-400">
-              {push.permissionState === 'denied'
-                ? 'Blocked by browser — enable in browser settings'
-                : push.subscription
-                  ? 'Receiving push notifications on this device'
-                  : 'Off — enable to get reminders'}
-            </p>
-          </div>
-
-          <div className={`bg-white rounded-md shadow-elevation-1 p-5 ${!push.subscription ? 'opacity-50 pointer-events-none' : ''}`}>
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <p className="text-body-md font-semibold text-slate-900">Injection day reminder</p>
-                <p className="text-body-sm text-slate-400">Get a nudge on your scheduled injection days</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setNotifEnabled(!notifEnabled)}
-                role="switch"
-                aria-checked={notifEnabled}
-                aria-label="Injection day reminder"
-                className={`w-12 h-7 rounded-full transition-colors relative ${
-                  notifEnabled ? 'bg-green-600' : 'bg-slate-200'
-                }`}
-              >
-                <span className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow-elevation-1 transition-transform ${
-                  notifEnabled ? 'left-[22px]' : 'left-0.5'
-                }`} aria-hidden="true" />
-              </button>
-            </div>
-
-            {notifEnabled && (
-              <div>
-                <label htmlFor="reminder-time" className="text-label text-slate-500 uppercase mb-2 block">Reminder time</label>
-                <input
-                  id="reminder-time"
-                  type="time"
-                  value={reminderTime}
-                  onChange={e => setReminderTime(e.target.value)}
-                  className="border-2 border-slate-200 rounded-md px-4 py-3 text-body-lg bg-white focus:border-slate-700 focus:outline-none"
-                />
-              </div>
-            )}
-          </div>
-
-          <div className={`bg-white rounded-md shadow-elevation-1 p-5 ${!push.subscription ? 'opacity-50 pointer-events-none' : ''}`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-body-md font-semibold text-slate-900">Weekly progress check-in</p>
-                <p className="text-body-sm text-slate-400">A weekly reminder to log your weight and how you feel</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setWeeklyCheckin(!weeklyCheckin)}
-                role="switch"
-                aria-checked={weeklyCheckin}
-                aria-label="Weekly progress check-in"
-                className={`w-12 h-7 rounded-full transition-colors relative ${
-                  weeklyCheckin ? 'bg-green-600' : 'bg-slate-200'
-                }`}
-              >
-                <span className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow-elevation-1 transition-transform ${
-                  weeklyCheckin ? 'left-[22px]' : 'left-0.5'
-                }`} aria-hidden="true" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {push.permissionState === 'denied' && (
-          <div className="mt-6 bg-rose-50 rounded-md p-4">
-            <p className="text-body-sm text-rose-600">
-              Notifications are blocked by your browser. To re-enable, open your browser's site settings and allow notifications for this site.
-            </p>
-          </div>
-        )}
-      </div>
-    )
-  }
 
   return (
     <div className="px-4 pt-5">
@@ -454,7 +330,7 @@ export default function Settings() {
               {push.subscription ? 'Push notifications enabled' : 'Not configured'}
             </p>
           </div>
-          <button onClick={() => setShowNotifSettings(true)}
+          <button onClick={() => navigate('/settings/notifications')}
             className="px-4 py-2 bg-slate-100 text-slate-700 text-label rounded-md hover:bg-slate-200 transition-colors">
             {push.subscription ? 'Manage' : 'Set up'}
           </button>

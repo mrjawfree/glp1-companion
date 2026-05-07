@@ -47,15 +47,48 @@ self.addEventListener('push', (event) => {
   const title = data.title || 'GLP-1 Companion'
   const options = {
     body: data.body || '',
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
-    data: { url: data.url || '/' },
+    icon: data.icon || '/icon-192.png',
+    badge: data.badge || '/icon-192.png',
+    tag: data.tag || undefined,
+    requireInteraction: data.requireInteraction || false,
+    silent: data.silent || false,
+    data: {
+      deeplink: data.data?.deeplink || data.url || '/',
+      notificationId: data.data?.notificationId || null,
+      contextId: data.data?.contextId || null,
+      key: data.key || null,
+    },
+    actions: (data.actions || []).slice(0, 2),
   }
   event.waitUntil(self.registration.showNotification(title, options))
 })
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
-  const url = event.notification.data?.url || '/'
-  event.waitUntil(clients.openWindow(url))
+
+  const data = event.notification.data || {}
+  let url = data.deeplink || '/'
+
+  if (event.action) {
+    const actionDef = (event.notification.actions || []).find(
+      (a) => a.action === event.action
+    )
+    if (actionDef && actionDef.url) {
+      url = actionDef.url
+    }
+  }
+
+  event.waitUntil(
+    clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then((windowClients) => {
+        for (const client of windowClients) {
+          if (new URL(client.url).origin === self.location.origin && 'focus' in client) {
+            client.postMessage({ type: 'NOTIFICATION_CLICK', url, data })
+            return client.focus()
+          }
+        }
+        return clients.openWindow(url)
+      })
+  )
 })

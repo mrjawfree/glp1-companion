@@ -58,6 +58,15 @@ export default {
         'elevation-2': '0 4px 12px rgba(15,26,43,0.08)',
         'elevation-3': '0 12px 32px rgba(15,26,43,0.12)',
       },
+      keyframes: {
+        'slide-up': {
+          '0%': { transform: 'translateY(100%)' },
+          '100%': { transform: 'translateY(0)' },
+        },
+      },
+      animation: {
+        'slide-up': 'slide-up 0.25s ease-out',
+      },
       spacing: {
         '0': '0',
         '1': '4px',
