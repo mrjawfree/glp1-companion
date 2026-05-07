@@ -13,6 +13,7 @@ import {
 } from '../types'
 import DoseChipSelector from './DoseChipSelector'
 import InjectionSitePicker from './InjectionSitePicker'
+import { isOnline, queueOfflineDose } from '../lib/offlineSync'
 
 interface DoseLogSheetProps {
   open: boolean
@@ -173,17 +174,31 @@ export default function DoseLogSheet({ open, onClose, onSaved, editEntry }: Dose
       skip_reason: isSkip ? skipReason : null,
     }
 
-    let error: unknown = null
-    if (isEditMode && editEntry) {
-      const result = await supabase.from('doses').update(payload).eq('id', editEntry.id)
-      error = result.error
+    let success = false
+
+    if (!isOnline()) {
+      const offlineId = editEntry?.id ?? crypto.randomUUID()
+      await queueOfflineDose({
+        id: offlineId,
+        payload: isEditMode ? { id: editEntry!.id, ...payload } : payload,
+        operation: isEditMode ? 'update' : 'insert',
+        createdAt: new Date().toISOString(),
+      })
+      success = true
     } else {
-      const result = await supabase.from('doses').insert(payload)
-      error = result.error
+      let error: unknown = null
+      if (isEditMode && editEntry) {
+        const result = await supabase.from('doses').update(payload).eq('id', editEntry.id)
+        error = result.error
+      } else {
+        const result = await supabase.from('doses').insert(payload)
+        error = result.error
+      }
+      success = !error
     }
 
     setSaving(false)
-    if (!error) {
+    if (success) {
       setDirty(false)
       setVisible(false)
       setTimeout(() => {

@@ -6,6 +6,7 @@ import { type DoseLogEntry } from '../types'
 import { DoseLogSkeleton } from '../components/Skeleton'
 import DoseLogSheet from '../components/DoseLogSheet'
 import DoseHistoryList from '../components/DoseHistoryList'
+import SyncBanner from '../components/SyncBanner'
 
 export default function DoseLog() {
   const { user } = useAuth()
@@ -76,7 +77,9 @@ export default function DoseLog() {
   if (loading) return <DoseLogSkeleton />
 
   return (
-    <div className="px-4 pt-5 pb-24">
+    <div className="pb-24">
+      <SyncBanner />
+      <div className="px-4 pt-5">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-title-lg text-slate-900">Dose History</h1>
         <button
@@ -130,10 +133,11 @@ export default function DoseLog() {
       />
 
       {toast && (
-        <div className="fixed bottom-20 left-4 right-4 z-50 bg-green-600 text-white rounded-md p-4 text-center text-body-md shadow-xl">
+        <div className="fixed bottom-20 left-4 right-4 z-50 bg-green-600 text-white rounded-md p-4 text-center text-body-md shadow-xl animate-slideUp motion-reduce:animate-none">
           {toast}
         </div>
       )}
+      </div>
     </div>
   )
 }
