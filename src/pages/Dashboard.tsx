@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useNutritionGoals } from '../hooks/useNutritionGoals'
+import { useDailyTotals } from '../hooks/useDailyTotals'
+import { useWaterLog } from '../hooks/useWaterLog'
 import { supabase } from '../lib/supabase'
 import { DashboardSkeleton } from '../components/Skeleton'
+import DailyNutritionSummaryCard from '../components/DailyNutritionSummaryCard'
 
 interface DoseEntry {
   id: string
@@ -22,48 +26,6 @@ function getGreeting() {
   if (h < 12) return 'Good morning'
   if (h < 17) return 'Good afternoon'
   return 'Good evening'
-}
-
-function NutritionRing({ protein, fiber, hydration, proteinGoal, fiberGoal }: {
-  protein: number; fiber: number; hydration: number; proteinGoal: number; fiberGoal: number
-}) {
-  const size = 160
-  const cx = size / 2
-  const cy = size / 2
-
-  const drawArc = (radius: number, fraction: number, color: string, width: number) => {
-    const f = Math.min(fraction, 1)
-    const circumference = 2 * Math.PI * radius
-    return (
-      <>
-        <circle cx={cx} cy={cy} r={radius} fill="none" stroke="#EDF1F6" strokeWidth={width} />
-        <circle
-          cx={cx} cy={cy} r={radius} fill="none" stroke={color} strokeWidth={width}
-          strokeDasharray={`${circumference * f} ${circumference}`}
-          strokeLinecap="round"
-          transform={`rotate(-90 ${cx} ${cy})`}
-          className="transition-all duration-500"
-        />
-      </>
-    )
-  }
-
-  return (
-    <div className="flex flex-col items-center">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label={`Daily nutrition: ${protein}g protein of ${proteinGoal}g goal, ${fiber}g fiber of ${fiberGoal}g goal, ${hydration} of 8 glasses water`}>
-        {drawArc(68, protein / proteinGoal, '#4A7C5C', 10)}
-        {drawArc(54, fiber / fiberGoal, '#8995A8', 8)}
-        {drawArc(42, hydration / 8, '#C2CCD9', 6)}
-        <text x={cx} y={cy - 6} textAnchor="middle" className="fill-slate-900 font-semibold" fontSize="20">{protein}g</text>
-        <text x={cx} y={cy + 14} textAnchor="middle" className="fill-slate-500" fontSize="12">protein</text>
-      </svg>
-      <div className="flex gap-4 mt-3 text-body-sm text-slate-500">
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-600" />Protein</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-slate-400" />Fiber</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-slate-300" />Water ({hydration}/8)</span>
-      </div>
-    </div>
-  )
 }
 
 function StreakRow({ streak, days }: { streak: number; days: ('logged' | 'partial' | 'missed' | 'today' | 'future')[] }) {
@@ -96,12 +58,13 @@ function StreakRow({ streak, days }: { streak: number; days: ('logged' | 'partia
 export default function Dashboard() {
   const { user } = useAuth()
   const navigate = useNavigate()
+  const todayStr = new Date().toISOString().split('T')[0]
+  const { goals, loading: goalsLoading } = useNutritionGoals()
+  const { totals, loading: totalsLoading, error: totalsError, reload: reloadTotals } = useDailyTotals(todayStr)
+  const { logWater } = useWaterLog()
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [lastDose, setLastDose] = useState<DoseEntry | null>(null)
-  const [todayProtein, setTodayProtein] = useState(0)
-  const [todayFiber, setTodayFiber] = useState(0)
-  const [hydration, setHydration] = useState(0)
   const [hasMealsToday, setHasMealsToday] = useState(false)
   const [streak, setStreak] = useState(0)
   const [streakDays, setStreakDays] = useState<('logged' | 'partial' | 'missed' | 'today' | 'future')[]>([])
@@ -118,17 +81,9 @@ export default function Dashboard() {
     const doseP = supabase.from('doses').select('*').eq('user_id', user.id).order('logged_at', { ascending: false }).limit(1).then(({ data }) => {
       if (data?.[0]) setLastDose(data[0])
     })
-    const today = new Date().toISOString().split('T')[0]
-    const mealsP = supabase.from('meals').select('protein_g, fiber_g').eq('user_id', user.id).gte('logged_at', today).then(({ data }) => {
-      if (data) {
-        setHasMealsToday(data.length > 0)
-        setTodayProtein(data.reduce((s, e) => s + (e.protein_g || 0), 0))
-        setTodayFiber(data.reduce((s, e) => s + (e.fiber_g || 0), 0))
-      }
+    const mealsP = supabase.from('meals').select('id').eq('user_id', user.id).gte('logged_at', todayStr).limit(1).then(({ data }) => {
+      if (data) setHasMealsToday(data.length > 0)
     })
-
-    const savedHydration = localStorage.getItem(`glp1_hydration_${today}`)
-    if (savedHydration) setHydration(parseInt(savedHydration))
 
     const streakP = computeStreak()
     Promise.all([profileP, doseP, mealsP, streakP]).finally(() => setLoading(false))
@@ -244,8 +199,20 @@ export default function Dashboard() {
         </div>
       </button>
 
-      <div className="bg-white rounded-md shadow-elevation-1 p-5 mb-5 flex justify-center">
-        <NutritionRing protein={todayProtein} fiber={todayFiber} hydration={hydration} proteinGoal={90} fiberGoal={25} />
+      <div className="mb-5">
+        <DailyNutritionSummaryCard
+          variant="compact"
+          loading={goalsLoading || totalsLoading}
+          error={totalsError}
+          goalsSet={!!goals && !goals.skipped_at}
+          calories={{ value: totals?.calories ?? 0, goal: goals?.calorie_goal ?? 2000 }}
+          protein={{ value: totals?.protein_g ?? 0, goal: goals?.protein_goal_g ?? 100 }}
+          water={{ value: totals?.water_ml ?? 0, goal: goals?.water_goal_ml ?? 2000 }}
+          onAddMeal={() => navigate('/food')}
+          onAddWater={async () => { await logWater(250); reloadTotals() }}
+          onEditGoals={() => navigate('/settings/nutrition-goals')}
+          onRetry={reloadTotals}
+        />
       </div>
 
       <StreakRow streak={streak} days={streakDays} />

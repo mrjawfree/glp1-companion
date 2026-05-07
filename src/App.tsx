@@ -10,6 +10,8 @@ const MealPlans = lazy(() => import('./pages/MealPlans'))
 const FoodLog = lazy(() => import('./pages/FoodLog'))
 const Progress = lazy(() => import('./pages/Progress'))
 const Settings = lazy(() => import('./pages/Settings'))
+const Nutrition = lazy(() => import('./pages/Nutrition'))
+const MacroGoalSetup = lazy(() => import('./pages/MacroGoalSetup'))
 const Login = lazy(() => import('./pages/Login'))
 const Welcome = lazy(() => import('./pages/onboarding/Welcome'))
 const ProfileSetup = lazy(() => import('./pages/onboarding/ProfileSetup'))
@@ -79,8 +81,10 @@ export default function App() {
               <Route path="doses" element={<DoseLog />} />
               <Route path="meals" element={<MealPlans />} />
               <Route path="food" element={<FoodLog />} />
+              <Route path="nutrition" element={<Nutrition />} />
               <Route path="progress" element={<Progress />} />
               <Route path="settings" element={<Settings />} />
+              <Route path="settings/nutrition-goals" element={<MacroGoalSetup />} />
             </Route>
           </Routes>
           </Suspense>
