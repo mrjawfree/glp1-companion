@@ -33,6 +33,7 @@ interface UserSettings {
   goal_weight?: number
   injection_day?: number
   injection_days?: number[]
+  height_cm?: number
 }
 
 type WeightUnit = 'lbs' | 'kg'
@@ -142,6 +143,15 @@ export default function Progress() {
   const delta = latestWeightVal && oldestRecentWeight
     ? parseFloat((latestWeightVal - oldestRecentWeight).toFixed(1))
     : null
+
+  const latestWeightKg = latestWeight
+    ? (latestWeight.weight_kg ?? (latestWeight.weight_lbs ? latestWeight.weight_lbs / KG_TO_LBS : null))
+    : null
+  const heightCm = settings.height_cm ?? null
+  const bmi = latestWeightKg && heightCm
+    ? parseFloat((latestWeightKg / ((heightCm / 100) ** 2)).toFixed(1))
+    : null
+  const bmiDate = latestWeight ? new Date(latestWeight.recorded_at) : null
 
   const sparkData = weightEntries
     .slice()
@@ -345,6 +355,38 @@ export default function Progress() {
               </div>
             )}
           </section>
+
+          {/* BMI Indicator Row (Option B) */}
+          {bmi !== null && (
+            <div
+              role="group"
+              aria-label={`BMI: ${bmi}${bmiDate ? ` as of ${bmiDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}` : ''}`}
+              style={{
+                margin: '0 16px 16px',
+                background: 'var(--cream)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-md)',
+                padding: '12px 16px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'baseline',
+              }}
+            >
+              <span style={{ fontSize: 14, lineHeight: '18px', fontWeight: 500, color: 'var(--ink-soft)' }}>
+                BMI
+              </span>
+              <div style={{ textAlign: 'right' }}>
+                <span style={{ fontSize: 18, lineHeight: '22px', fontWeight: 600, color: 'var(--ink)' }}>
+                  {bmi}
+                </span>
+                {bmiDate && (
+                  <p style={{ fontSize: 12, lineHeight: '16px', color: 'var(--ink-soft)', marginTop: 2 }}>
+                    (from {bmiDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Adherence Row */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, margin: '0 16px' }}>
