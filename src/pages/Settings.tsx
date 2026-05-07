@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useNutritionGoals } from '../hooks/useNutritionGoals'
 import { usePushNotifications } from '../hooks/usePushNotifications'
 import { supabase } from '../lib/supabase'
 import { SettingsSkeleton } from '../components/Skeleton'
@@ -25,6 +26,7 @@ export default function Settings() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
   const push = usePushNotifications(user?.id)
+  const { goals: nutritionGoals } = useNutritionGoals()
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [settings, setSettings] = useState<UserSettings | null>(null)
@@ -457,6 +459,23 @@ export default function Settings() {
           <button onClick={() => setShowNotifSettings(true)}
             className="px-4 py-2 bg-slate-100 text-slate-700 text-label rounded-md hover:bg-slate-200 transition-colors">
             {push.subscription ? 'Manage' : 'Set up'}
+          </button>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-md shadow-elevation-1 p-5 mb-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-body-md font-semibold text-slate-900">Nutrition goals</p>
+            <p className="text-body-sm text-slate-400">
+              {nutritionGoals && !nutritionGoals.skipped_at
+                ? `${nutritionGoals.calorie_goal} kcal · ${nutritionGoals.protein_goal_g}g protein · ${nutritionGoals.water_goal_ml} ml water`
+                : 'Not configured'}
+            </p>
+          </div>
+          <button onClick={() => navigate('/settings/nutrition-goals')}
+            className="px-4 py-2 bg-slate-100 text-slate-700 text-label rounded-md hover:bg-slate-200 transition-colors">
+            {nutritionGoals && !nutritionGoals.skipped_at ? 'Edit' : 'Set up'}
           </button>
         </div>
       </div>

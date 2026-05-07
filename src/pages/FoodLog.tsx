@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { useNutritionGoals } from '../hooks/useNutritionGoals'
 import { FoodLogSkeleton } from '../components/Skeleton'
 
 interface FoodEntry {
@@ -48,6 +49,7 @@ function MacroBar({ protein, fat, carbs }: { protein: number; fat: number; carbs
 
 export default function FoodLog() {
   const { user } = useAuth()
+  const { goals: nutritionGoals } = useNutritionGoals()
   const [loading, setLoading] = useState(true)
   const [entries, setEntries] = useState<FoodEntry[]>([])
   const [view, setView] = useState<'daily' | 'add' | 'log'>('daily')
@@ -120,7 +122,6 @@ export default function FoodLog() {
 
   const totalCalories = entries.reduce((s, e) => s + e.calories, 0)
   const totalProtein = entries.reduce((s, e) => s + e.protein_g, 0)
-  const totalFiber = entries.reduce((s, e) => s + e.fiber_g, 0)
 
   const groupedByMeal = entries.reduce<Record<string, FoodEntry[]>>((acc, entry) => {
     if (!acc[entry.meal_type]) acc[entry.meal_type] = []
@@ -216,7 +217,8 @@ export default function FoodLog() {
           </div>
 
           <div>
-            <label className="text-label text-slate-500 uppercase mb-2 block">Macros</label>
+            <label className="text-label text-slate-500 uppercase mb-1 block">Macros (optional)</label>
+            <p className="text-body-sm text-slate-400 mb-2">Skip if you're not tracking — your meal still logs.</p>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label htmlFor="food-protein" className="text-body-sm text-slate-400 mb-1 block">Protein (g)</label>
@@ -285,11 +287,11 @@ export default function FoodLog() {
         <div className="flex justify-between items-end mb-4">
           <div>
             <p className="text-body-sm text-slate-400">Protein</p>
-            <p className="text-title-lg text-green-600">{totalProtein.toFixed(0)}g <span className="text-body-sm text-slate-400">/ 90g</span></p>
+            <p className="text-title-lg text-green-600">{totalProtein.toFixed(0)}g <span className="text-body-sm text-slate-400">/ {nutritionGoals?.protein_goal_g ?? 90}g</span></p>
           </div>
           <div className="text-right">
-            <p className="text-body-sm text-slate-400">Fiber</p>
-            <p className="text-body-lg text-slate-700">{totalFiber.toFixed(0)}g <span className="text-body-sm text-slate-400">/ 25g</span></p>
+            <p className="text-body-sm text-slate-400">Calories</p>
+            <p className="text-body-lg text-slate-700">{totalCalories} <span className="text-body-sm text-slate-400">/ {nutritionGoals?.calorie_goal ?? 2000} kcal</span></p>
           </div>
         </div>
         <div className="flex gap-4 text-body-sm text-slate-400">
