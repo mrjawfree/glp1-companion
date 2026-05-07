@@ -2,6 +2,8 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useEffect, lazy, Suspense } from 'react'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { OnboardingProvider } from './hooks/useOnboarding'
+import { useNotificationNav } from './hooks/useNotificationNav'
+import { useCapacitorPush } from './hooks/useCapacitorPush'
 
 const Layout = lazy(() => import('./components/Layout'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
@@ -18,14 +20,21 @@ const FirstMealEntry = lazy(() => import('./pages/onboarding/FirstMealEntry'))
 const Success = lazy(() => import('./pages/onboarding/Success'))
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'))
 const TermsOfService = lazy(() => import('./pages/TermsOfService'))
+const NotificationSettings = lazy(() => import('./pages/NotificationSettings'))
 
 const ONBOARDING_ROUTE_KEY = 'glp1_onboarding_route'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
+  useCapacitorPush(user?.id)
   if (loading) return <div className="flex items-center justify-center h-screen bg-warm-white text-slate-500">Loading...</div>
   if (!user) return <Navigate to="/onboarding" replace />
   return <>{children}</>
+}
+
+function NotificationNavHandler() {
+  useNotificationNav()
+  return null
 }
 
 function OnboardingRouteTracker({ children }: { children: React.ReactNode }) {
@@ -63,6 +72,7 @@ export default function App() {
   return (
     <AuthProvider>
       <OnboardingProvider>
+        <NotificationNavHandler />
         <OnboardingRouteTracker>
           <Suspense fallback={<LoadingFallback />}>
           <Routes>
@@ -81,6 +91,7 @@ export default function App() {
               <Route path="food" element={<FoodLog />} />
               <Route path="progress" element={<Progress />} />
               <Route path="settings" element={<Settings />} />
+              <Route path="settings/notifications" element={<NotificationSettings />} />
             </Route>
           </Routes>
           </Suspense>

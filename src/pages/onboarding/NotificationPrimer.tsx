@@ -2,12 +2,14 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { usePushNotifications } from '../../hooks/usePushNotifications'
+import { useNotificationSettings } from '../../hooks/useNotificationSettings'
 import OnboardingShell from '../../components/OnboardingShell'
 
 export default function NotificationPrimer() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { subscribe, supported, loading } = usePushNotifications(user?.id)
+  const ns = useNotificationSettings(user?.id)
   const [denied, setDenied] = useState(false)
 
   const handleEnable = async () => {
@@ -28,6 +30,13 @@ export default function NotificationPrimer() {
       setDenied(true)
       return
     }
+    await ns.save({ permission_state: 'granted' })
+    navigate('/onboarding/first-meal')
+  }
+
+  const handleDefer = async () => {
+    const deferredUntil = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+    await ns.save({ deferred_until: deferredUntil })
     navigate('/onboarding/first-meal')
   }
 
@@ -45,14 +54,28 @@ export default function NotificationPrimer() {
             <path d="M14 27V28C14 30.21 15.79 32 18 32C20.21 32 22 30.21 22 28V27" stroke="#4A7C5C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </div>
-        <h1 className="text-display-lg text-slate-900 mb-3">Stay on track with reminders</h1>
-        <p className="text-body-lg text-slate-500 mb-4 max-w-sm">
-          We'll send a gentle nudge on injection days and when it's time to log meals. You can change this any time in Settings.
+        <h1 className="text-display-lg text-slate-900 mb-3">Stay on track without thinking about it</h1>
+        <ul className="text-body-lg text-slate-500 mb-4 max-w-sm text-left space-y-2">
+          <li className="flex items-start gap-2">
+            <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-green-600 shrink-0" />
+            Weekly dose reminders
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-green-600 shrink-0" />
+            Gentle check-ins after your dose
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-green-600 shrink-0" />
+            Refill heads-ups before you run out
+          </li>
+        </ul>
+        <p className="text-body-sm text-slate-400 max-w-sm">
+          You can change what you get and when, any time in Settings.
         </p>
         {denied && (
-          <div className="w-full max-w-sm bg-amber-100 border border-amber-500 rounded-md p-3 mb-4" role="alert">
+          <div className="w-full max-w-sm bg-amber-100 border border-amber-500 rounded-md p-3 mt-4" role="alert">
             <p className="text-body-sm text-amber-500">
-              Notifications were blocked by your browser. You can enable them later in your device settings, then turn them on in the app's Settings page.
+              No problem — you can enable reminders anytime in Settings.
             </p>
           </div>
         )}
@@ -73,13 +96,13 @@ export default function NotificationPrimer() {
               disabled={loading}
               className="w-full bg-slate-700 text-white py-4 rounded-md text-label uppercase tracking-wider hover:bg-slate-900 transition-colors disabled:opacity-40"
             >
-              {loading ? 'Setting up...' : 'Enable notifications'}
+              {loading ? 'Setting up...' : 'Turn on reminders'}
             </button>
             <button
-              onClick={() => navigate('/onboarding/first-meal')}
+              onClick={handleDefer}
               className="w-full text-center text-slate-400 text-body-md py-2"
             >
-              Not now
+              Maybe later
             </button>
           </>
         )}
