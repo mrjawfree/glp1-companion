@@ -26,23 +26,33 @@ function openDB(): Promise<IDBDatabase> {
 }
 
 export async function queueOfflineDose(dose: PendingDose): Promise<void> {
-  const db = await openDB()
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readwrite')
-    tx.objectStore(STORE_NAME).put(dose)
-    tx.oncomplete = () => resolve()
-    tx.onerror = () => reject(tx.error)
-  })
+  try {
+    const db = await openDB()
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite')
+      tx.objectStore(STORE_NAME).put(dose)
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+    })
+  } catch (err) {
+    console.error('[offlineSync] Failed to queue dose:', err)
+    throw err
+  }
 }
 
 export async function getPendingCount(): Promise<number> {
-  const db = await openDB()
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readonly')
-    const req = tx.objectStore(STORE_NAME).count()
-    req.onsuccess = () => resolve(req.result)
-    req.onerror = () => reject(req.error)
-  })
+  try {
+    const db = await openDB()
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readonly')
+      const req = tx.objectStore(STORE_NAME).count()
+      req.onsuccess = () => resolve(req.result)
+      req.onerror = () => reject(req.error)
+    })
+  } catch (err) {
+    console.error('[offlineSync] Failed to get pending count:', err)
+    return 0
+  }
 }
 
 export async function flushPendingDoses(): Promise<{ synced: number; failed: number }> {
@@ -74,9 +84,14 @@ export async function flushPendingDoses(): Promise<{ synced: number; failed: num
 
     if (!error) {
       synced++
-      const delTx = db.transaction(STORE_NAME, 'readwrite')
-      delTx.objectStore(STORE_NAME).delete(item.id)
+      try {
+        const delTx = db.transaction(STORE_NAME, 'readwrite')
+        delTx.objectStore(STORE_NAME).delete(item.id)
+      } catch (delErr) {
+        console.error('[offlineSync] Failed to remove synced item:', delErr)
+      }
     } else {
+      console.warn('[offlineSync] Failed to sync dose:', item.id, error)
       failed++
     }
   }

@@ -58,10 +58,13 @@ export const SKIP_REASONS: { value: SkipReason; label: string }[] = [
   { value: 'other', label: 'Other' },
 ]
 
-export const DOSE_AMOUNTS: Record<'ozempic' | 'wegovy' | 'mounjaro', string[]> = {
+export const DOSE_AMOUNTS: Partial<Record<Medication, string[]>> = {
   ozempic: ['0.25', '0.5', '1', '1.5', '2'],
   wegovy: ['0.25', '0.5', '1', '1.7', '2.4'],
   mounjaro: ['2.5', '5', '7.5', '10', '12.5', '15'],
+  zepbound: ['2.5', '5', '7.5', '10', '12.5', '15'],
+  saxenda: ['0.6', '1.2', '1.8', '2.4', '3'],
+  rybelsus: ['3', '7', '14'],
 }
 
 export interface OnboardingData {

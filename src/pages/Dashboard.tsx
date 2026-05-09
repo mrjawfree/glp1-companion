@@ -190,7 +190,7 @@ export default function Dashboard() {
 
     if (daysUntilNext > 1) return { state: 'upcoming', nextDoseDate: nextDose.toISOString(), daysSinceLastDose: daysSince }
     if (daysUntilNext === 1) return { state: 'tomorrow', nextDoseDate: nextDose.toISOString(), daysSinceLastDose: daysSince }
-    if (daysUntilNext === 0 || daysSince === intervalDays) return { state: 'today', nextDoseDate: nextDose.toISOString(), daysSinceLastDose: daysSince }
+    if (daysUntilNext <= 0 && daysSince <= intervalDays) return { state: 'today', nextDoseDate: nextDose.toISOString(), daysSinceLastDose: daysSince }
     if (daysSince > intervalDays && daysSince <= intervalDays + 3) return { state: 'overdue', nextDoseDate: null, daysSinceLastDose: daysSince }
     return { state: 'severe-overdue', nextDoseDate: null, daysSinceLastDose: daysSince }
   }

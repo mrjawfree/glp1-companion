@@ -165,7 +165,7 @@ export default function DoseLogSheet({ open, onClose, onSaved, editEntry }: Dose
     const payload = {
       user_id: user.id,
       medication,
-      dose_amount: isSkip ? '0' : doseAmount,
+      dose_amount: isSkip ? null : doseAmount,
       logged_at: new Date(doseDate + 'T12:00:00').toISOString(),
       injection_site: isSkip ? null : injectionSite,
       side_effects: sideEffects.length > 0 ? sideEffects : null,
@@ -230,7 +230,7 @@ export default function DoseLogSheet({ open, onClose, onSaved, editEntry }: Dose
       case 'date': return !!doseDate
       case 'medication': return !!medication
       case 'dose': return !!doseAmount && parseFloat(doseAmount) > 0
-      case 'site': return true
+      case 'site': return !!injectionSite
       case 'effects': return true
       case 'skip': return !!skipReason
     }

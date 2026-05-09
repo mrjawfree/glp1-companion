@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { isOnline, onOnlineChange, getPendingCount, flushPendingDoses } from '../lib/offlineSync'
 
 export default function SyncBanner() {
   const [online, setOnline] = useState(isOnline)
   const [pendingCount, setPendingCount] = useState(0)
   const [syncing, setSyncing] = useState(false)
+  const syncingRef = useRef(false)
 
   useEffect(() => {
     return onOnlineChange(setOnline)
@@ -15,10 +16,16 @@ export default function SyncBanner() {
   }, [online])
 
   const handleSync = useCallback(async () => {
+    if (syncingRef.current) return
+    syncingRef.current = true
     setSyncing(true)
-    const { synced } = await flushPendingDoses()
-    setPendingCount(prev => Math.max(0, prev - synced))
-    setSyncing(false)
+    try {
+      const { synced } = await flushPendingDoses()
+      setPendingCount(prev => Math.max(0, prev - synced))
+    } finally {
+      setSyncing(false)
+      syncingRef.current = false
+    }
   }, [])
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useCallback } from 'react'
 
 interface DoseChipSelectorProps {
   amounts: string[]
@@ -17,12 +17,24 @@ export default function DoseChipSelector({ amounts, selected, onChange, unit = '
     }
   }, [selected])
 
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    const idx = amounts.indexOf(selected)
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault()
+      onChange(amounts[(idx + 1) % amounts.length])
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault()
+      onChange(amounts[(idx - 1 + amounts.length) % amounts.length])
+    }
+  }, [amounts, selected, onChange])
+
   return (
     <div
       ref={scrollRef}
       className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory scrollbar-hide"
       role="radiogroup"
       aria-label="Dose amount"
+      onKeyDown={handleKeyDown}
     >
       {amounts.map((amount) => {
         const isSelected = amount === selected
@@ -33,6 +45,7 @@ export default function DoseChipSelector({ amounts, selected, onChange, unit = '
             type="button"
             role="radio"
             aria-checked={isSelected}
+            tabIndex={isSelected ? 0 : -1}
             onClick={() => onChange(amount)}
             className={`
               flex-shrink-0 h-14 px-5 rounded-full text-body-md font-medium snap-center
