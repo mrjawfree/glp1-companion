@@ -68,7 +68,7 @@ create policy "users_delete_own_water"
   using (auth.uid() = user_id);
 
 -- 3. Daily nutrition totals view
--- Note: meals table already has calories (int), protein_g (numeric), fiber_g, fat_g, carbs_g
+-- Note: food_entries table has calories (int), protein_g (numeric), fiber_g, fat_g, carbs_g
 -- Column is logged_at (timestamptz), not eaten_at
 create or replace view public.daily_nutrition_totals as
 with meals_agg as (
@@ -77,7 +77,7 @@ with meals_agg as (
     (logged_at at time zone 'UTC')::date as day,
     coalesce(sum(calories), 0)::int       as calories,
     coalesce(sum(protein_g), 0)::int      as protein_g
-  from public.meals
+  from public.food_entries
   group by 1, 2
 ),
 water_agg as (
@@ -111,7 +111,7 @@ language sql stable security invoker as $$
       (logged_at at time zone tz)::date as day,
       coalesce(sum(m.calories), 0)::int as calories,
       coalesce(sum(m.protein_g), 0)::int as protein_g
-    from public.meals m
+    from public.food_entries m
     where m.user_id = auth.uid()
       and (m.logged_at at time zone tz)::date between start_date and end_date
     group by 1
