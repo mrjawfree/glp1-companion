@@ -4,12 +4,16 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { Medication, MEDICATION_INFO } from '../types'
 import { DoseLogSkeleton } from '../components/Skeleton'
+import SegmentedControl from '../components/SegmentedControl'
+import WeeklyAdherenceChart from '../components/WeeklyAdherenceChart'
+import InjectionSiteHeatmap from '../components/InjectionSiteHeatmap'
 
 interface DoseEntry {
   id: string
   medication: string
   dose_amount: string
   logged_at: string
+  injection_site: string | null
   side_effects: string[] | null
   notes: string | null
 }
@@ -62,6 +66,8 @@ export default function DoseLog() {
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const [filter, setFilter] = useState<'all' | '30' | 'year'>('all')
+  const [tab, setTab] = useState<'history' | 'analytics'>('history')
+  const [scheduledDays, setScheduledDays] = useState<number[]>([])
   const [doseDateTime, setDoseDateTime] = useState(new Date().toISOString().slice(0, 16))
   const [showDoubleLogConfirm, setShowDoubleLogConfirm] = useState(false)
 
@@ -97,6 +103,9 @@ export default function DoseLog() {
     supabase.from('users').select('medication, current_dose').eq('id', user.id).single().then(({ data }) => {
       if (data?.medication) setMedication(data.medication as Medication)
       if (data?.current_dose) setDoseAmount(data.current_dose)
+    })
+    supabase.from('user_settings').select('injection_days').eq('user_id', user.id).single().then(({ data }) => {
+      if (data?.injection_days) setScheduledDays(data.injection_days)
     })
     supabase.from('doses').select('injection_site').eq('user_id', user.id).order('logged_at', { ascending: false }).limit(1).then(({ data }) => {
       const suggested = getSuggestedSite(data?.[0]?.injection_site || null)
@@ -364,6 +373,13 @@ export default function DoseLog() {
     )
   }
 
+  const SITE_LABEL: Record<string, string> = {
+    left_abdomen: 'L. abdomen',
+    right_abdomen: 'R. abdomen',
+    left_thigh: 'L. thigh',
+    right_thigh: 'R. thigh',
+  }
+
   return (
     <div className="px-4 pt-5">
       <div className="flex items-center justify-between mb-4">
@@ -374,54 +390,84 @@ export default function DoseLog() {
         </button>
       </div>
 
-      <div className="flex gap-2 mb-5" role="tablist" aria-label="Filter by time range">
-        {[{ key: 'all' as const, label: 'Last 90 days' }, { key: '30' as const, label: 'Last 30 days' }, { key: 'year' as const, label: 'This year' }].map(f => (
-          <button key={f.key} onClick={() => setFilter(f.key)}
-            role="tab" aria-selected={filter === f.key}
-            className={`px-3 py-1.5 rounded-pill text-body-sm transition-colors ${
-              filter === f.key ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-500'
-            }`}>
-            {f.label}
-          </button>
-        ))}
+      <div className="mb-4">
+        <SegmentedControl
+          options={[
+            { value: 'history' as const, label: 'History' },
+            { value: 'analytics' as const, label: 'Analytics' },
+          ]}
+          selected={tab}
+          onChange={setTab}
+        />
       </div>
 
-      {Object.entries(groupedDoses).map(([month, entries]) => (
-        <div key={month} className="mb-5">
-          <h3 className="text-label text-slate-400 uppercase mb-3 sticky top-0 bg-warm-white py-1 z-10">{month}</h3>
-          <div className="space-y-2">
-            {entries.map(dose => (
-              <div key={dose.id} className="bg-white rounded-md p-4 shadow-elevation-1">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-body-md font-semibold text-slate-900 capitalize">{dose.medication}</p>
-                    <p className="text-body-sm text-slate-500">{dose.dose_amount}mg</p>
-                  </div>
-                  <p className="text-body-sm text-slate-400">
-                    {new Date(dose.logged_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                  </p>
-                </div>
-                {dose.side_effects && dose.side_effects.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {dose.side_effects.slice(0, 3).map(e => (
-                      <span key={e} className="text-body-sm bg-amber-100 text-amber-500 px-2 py-0.5 rounded-pill">{e}</span>
-                    ))}
-                    {dose.side_effects.length > 3 && (
-                      <span className="text-body-sm text-slate-400">+{dose.side_effects.length - 3}</span>
-                    )}
-                  </div>
-                )}
-              </div>
+      {tab === 'analytics' ? (
+        <div className="space-y-4 pb-6">
+          <WeeklyAdherenceChart doses={doses} scheduledDays={scheduledDays} />
+          <InjectionSiteHeatmap doses={doses} />
+        </div>
+      ) : (
+        <>
+          <div className="flex gap-2 mb-5" role="tablist" aria-label="Filter by time range">
+            {[{ key: 'all' as const, label: 'Last 90 days' }, { key: '30' as const, label: 'Last 30 days' }, { key: 'year' as const, label: 'This year' }].map(f => (
+              <button key={f.key} onClick={() => setFilter(f.key)}
+                role="tab" aria-selected={filter === f.key}
+                className={`px-3 py-1.5 rounded-pill text-body-sm transition-colors ${
+                  filter === f.key ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-500'
+                }`}>
+                {f.label}
+              </button>
             ))}
           </div>
-        </div>
-      ))}
 
-      {doses.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-body-lg text-slate-400 mb-2">Your first logged dose will appear here.</p>
-          <button onClick={openLogView} className="text-info text-body-md">Log your first dose</button>
-        </div>
+          {Object.entries(groupedDoses).map(([month, entries]) => (
+            <div key={month} className="mb-5">
+              <h3 className="text-label text-slate-400 uppercase mb-3 sticky top-0 bg-warm-white py-1 z-10">{month}</h3>
+              <div className="space-y-2">
+                {entries.map(dose => (
+                  <div key={dose.id} className="bg-white rounded-md p-4 shadow-elevation-1">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-body-md font-semibold text-slate-900 capitalize">{dose.medication}</p>
+                        <p className="text-body-sm text-slate-500">
+                          {dose.dose_amount}mg
+                          {dose.injection_site && (
+                            <span className="text-slate-400"> · {SITE_LABEL[dose.injection_site] || dose.injection_site}</span>
+                          )}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-body-sm text-slate-400">
+                          {new Date(dose.logged_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </p>
+                        <p className="text-body-sm text-slate-400">
+                          {new Date(dose.logged_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                        </p>
+                      </div>
+                    </div>
+                    {dose.side_effects && dose.side_effects.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {dose.side_effects.slice(0, 3).map(e => (
+                          <span key={e} className="text-body-sm bg-amber-100 text-amber-500 px-2 py-0.5 rounded-pill">{e}</span>
+                        ))}
+                        {dose.side_effects.length > 3 && (
+                          <span className="text-body-sm text-slate-400">+{dose.side_effects.length - 3}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          {doses.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-body-lg text-slate-400 mb-2">Your first logged dose will appear here.</p>
+              <button onClick={openLogView} className="text-info text-body-md">Log your first dose</button>
+            </div>
+          )}
+        </>
       )}
     </div>
   )
